@@ -8,7 +8,7 @@ var calcButtonElem = document.getElementById("calc-button");
 var calcResolution = 40;
 
 // Configure map element
-var map = L.map('map').setView([59, 13], 10);
+var map = L.map('map').setView([59.33, 18.07], 6);
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
@@ -38,9 +38,11 @@ var pl, hz; // Map-items that displays view-poly-lines and horizon-line
 // When a point on the map is clicked, this point is set as the calculation base-point
 function onMapClick(e) {
     console.log(e.latlng);
-    calcLocation.setLatLng([e.latlng.lat, e.latlng.lng]);
-    document.getElementById("lat-disp").innerText = e.latlng.lat;
-    document.getElementById("lon-disp").innerText = e.latlng.lng;
+    lat = e.latlng.lat.toFixed(4)
+    lng = e.latlng.lng.toFixed(4)
+    calcLocation.setLatLng([lat, lng]);
+    document.getElementById("lat-disp").innerText = lat;
+    document.getElementById("lon-disp").innerText = lng;
 }
 
 // loadMapData runs when the calculation-button is pressed

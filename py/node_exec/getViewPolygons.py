@@ -5,7 +5,7 @@ from main import *
 
 from datetime import datetime
 from contextlib import redirect_stdout
-with open('py_log.txt', 'w') as f:
+with open('temp/py_log.txt', 'w+') as f:
     f.write("-- Log -- \n")
     f.write(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
     with redirect_stdout(f):

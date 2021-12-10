@@ -33,19 +33,6 @@ def coordToTileIndex(lon, lat):
     x, y = round((lon-(tLon*100000))/25), round((100000-(lat-(tLat*100000)))/25)
     return(tLon, tLat, x, y)
 
-def displayMapLine(start, end): #start:[x, y], end:[x, y], 
-    w = wf.worldfile("./py/assets/nordicRefMap.jpgw") # Open world-file
-    trans = proj.Transformer.from_crs("epsg:3035", "epsg:3785", always_xy=True) # Convert coordinate-system
-    sLon, sLat = trans.transform(start[0], start[1]) 
-    eLon, eLat = trans.transform(end[0], end[1])
-    x0, y0 = w.coordToPx(sLon, sLat)
-    x1, y1 = w.coordToPx(eLon, eLat)
-    im = Image.open("./py/assets/nordicRefMap.jpg") 
-    draw = ImageDraw.Draw(im)
-    draw.line((x0, y0, x1, y1), fill = 128, width=10)
-    print(x0, y0, x1, y1)
-    im.save("imgtemp.jpg")
-
 def getTileArea(tLon, tLat):
     latlngs = []
     latlngs.append([*euTOwm.transform(tLon*100000, tLat*100000)])
@@ -90,7 +77,7 @@ def getLinePointsAndCoords(tile, tLon, tLat, startX, startY, v):
     return(points, coords)
 
 def exportPointsToCSV(x, h, c):
-    with open("plotPoints.csv", "w+") as f:
+    with open("temp/plotPoints.csv", "w+") as f:
         f.write("sep=,\n")
         for i in range(len(x)):
             f.write(str(x[i]) + "," +str(h[i]) + ","+ str(c[i]) + "\n")
@@ -124,7 +111,7 @@ def plotProfile(points):
     #Create plot
     exportPointsToCSV(xPlot, hPlot, cPlot)
     fig = px.scatter(x=xPlot, y=hPlot, color=cPlot)
-    fig.show()
+    #fig.show()
 
 
 def getViewLine(startLon, startLat, v): #Returns a polyline object representing visible areas
@@ -195,6 +182,33 @@ def getViewPolygons(startLon, startLat, res):
     hzPoly.append(hzPoly[0]) # Close polygon
 
     return(lines, hzPoly)
+
+def findHills():
+    t = [46, 39]
+    tile = rasterio.open("./demtiles/dem_" + str(t[0]) + "_" + str(t[1]) +  ".tif").read()[0]
+
+    hSpots = []
+
+    for i in range(1, 3999):
+        if (i%100 == 0): print(i)
+        for j in range(1, 3999):
+            check = [tile[i][j]]
+            
+
+            h = tile[i][j]
+            if h > tile[i+1][j+1] and h > tile[i+1][j-1] and h > tile[i-1][j-1] and h > tile[i-1][j+1]:
+                hSpots.append([j, i])
+
+    print(len(hSpots))
+
+    from datetime import datetime
+    from contextlib import redirect_stdout
+    with open('temp/py_log.txt', 'w+') as f:
+        f.write("-- Log -- \n")
+        with redirect_stdout(f):
+            print()
+            print(hSpots)
+
 
 
 def main():
