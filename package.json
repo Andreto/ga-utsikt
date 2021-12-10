@@ -1,0 +1,16 @@
+{
+  "name": "utsiktsarea",
+  "version": "1.0.0",
+  "description": "",
+  "main": "nodeServer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node nodeServer.js"
+  },
+  "author": "Andreas Törnkvist",
+  "license": "MIT",
+  "dependencies": {
+    "ansicolor": "^1.1.95",
+    "express": "^4.17.1"
+  }
+}
