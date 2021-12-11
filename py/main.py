@@ -9,7 +9,6 @@ import json
 import pyproj as proj
 import numpy as np
 import plotly.express as px
-from PIL import Image, ImageDraw
 import rasterio
 
 
@@ -76,14 +75,18 @@ def getLinePointsAndCoords(tile, tLon, tLat, startX, startY, v):
 
     return(points, coords)
 
-def exportPointsToCSV(x, h, c):
+def exportPointsToCSV(data):
     with open("temp/plotPoints.csv", "w+") as f:
         f.write("sep=,\n")
-        for i in range(len(x)):
-            f.write(str(x[i]) + "," +str(h[i]) + ","+ str(c[i]) + "\n")
+        for i in range(len(data[0])):
+            for d in range(len(data)):
+                f.write(str(data[d][i]))
+                if d != len(data) - 1:
+                    f.write(",")
+            f.write("\n")
 
-def plotProfile(points):
-    hPlot = [] ; xPlot = [] ; cPlot = []
+def plotProfile(points, maxElev):
+    hPlot = [] ; xPlot = [] ; cPlot = [] ; vPlot = [] ; hdPlot = []
     vMax = -1
     for i in range(len(points)):
         # i # the tile-pixel-index; x-position relative to the ellipsoid edge. i*25 is the length in meters.
@@ -99,7 +102,6 @@ def plotProfile(points):
 
         y = math.cos((i*25)/(earthRadius))*h + curveShift - points[0] - viewHeight
         hPlot.append(y)
-
         #Detect visibility
         v = math.atan(x and y / x or 0)
         if v >= vMax and x > 0:
@@ -108,26 +110,27 @@ def plotProfile(points):
         else:
             cPlot.append("b")
 
+        requiredElev = (math.tan(vMax)*x) - curveShift + points[0] + viewHeight
+        if requiredElev > maxElev:
+            break 
+
     #Create plot
-    exportPointsToCSV(xPlot, hPlot, cPlot)
-    fig = px.scatter(x=xPlot, y=hPlot, color=cPlot)
+    exportPointsToCSV([xPlot, hPlot, cPlot])
+    #fig = px.scatter(x=xPlot, y=hPlot, color=cPlot)
     #fig.show()
 
 
-def getViewLine(startLon, startLat, v): #Returns a polyline object representing visible areas
+def getViewLine(startLon, startLat, v, tile): #Returns a polyline object representing visible areas
 
-    startLon, startLat = wmTOeu.transform(startLon, startLat)
     tLon, tLat, pX, pY = coordToTileIndex(startLon, startLat)
-
-    demPath = json.load(open("./serverParameters/demfiles.json", "r"))["path"]
-
-    tile = rasterio.open(demPath + "/dem_" + str(tLon) + "_" + str(tLat) +  ".tif").read()[0]
+    maxElev = json.load(open("./serverParameters/maxElevations.json", "r"))[str(tLon) + "_" + str(tLat)]
 
     #points = getLinePointsAndCoords(tile, tLon, tLat, pX, pY, pX, 0)
     points, coords = getLinePointsAndCoords(tile, tLon, tLat, pX, pY, v)
 
-    if (v == (5/4)*math.pi): 
-        plotProfile(points)
+    #if (v == (5/4)*math.pi): 
+       # plotProfile(points, maxElev)
+
 
     latlngs = []
 
@@ -166,15 +169,24 @@ def getViewLine(startLon, startLat, v): #Returns a polyline object representing 
             latlngs.append(lladd)
             llon = False
             lladd = []
+
+        requiredElev = (math.tan(vMax)*x) - curveShift + points[0] + viewHeight
+        if requiredElev > maxElev:
+            break
+
     return(latlngs)
 
 def getViewPolygons(startLon, startLat, res):
     lines = [] # Sightlines
     hzPoly = [] # Horizon polygon
-    #res = 16 #Number of lines in one full rotation
+
+    tLon, tLat, pX, pY = coordToTileIndex(startLon, startLat)
+
+    demPath = json.load(open("./serverParameters/demfiles.json", "r"))["path"]
+    tile = rasterio.open(demPath + "/dem_" + str(tLon) + "_" + str(tLat) +  ".tif").read()[0]
 
     for i in range(res):
-        line = getViewLine(float(startLon), float(startLat), (2*math.pi/res)*i)
+        line = getViewLine(float(startLon), float(startLat), (2*math.pi/res)*i, tile)
         for l in line:
             lines.append(l)
         hzPoly.append(line[-1][-1])
@@ -182,6 +194,18 @@ def getViewPolygons(startLon, startLat, res):
     hzPoly.append(hzPoly[0]) # Close polygon
 
     return(lines, hzPoly)
+
+def calcViewPolys(startLon, startLat, res):
+    lines = [] # Sightlines
+    hzPoly = [] # Horizon polygon
+    vMax = [-4] * res # Max angel for each direction
+
+    tLon, tLat, pX, pY = coordToTileIndex(startLon, startLat)
+
+
+
+
+
 
 def findHills():
     t = [46, 39]
@@ -224,5 +248,7 @@ def main():
     #print(tileIndexToCoord(t[0], t[1], x0, y0), tileIndexToCoord(t[0], t[1], x1, y1))
     plotProfile(points)
 
+    print(wmTOeu.transform(Lon, Lat))
 
 ###### MAIN EXC ######
+
