@@ -6,5 +6,5 @@ py/__pycache__/
 
 temp/
 demtiles/
-serverParameters/
+serverParameters/*
 .vscode
