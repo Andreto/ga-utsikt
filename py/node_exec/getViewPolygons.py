@@ -20,7 +20,7 @@ start = time.time()
 
 
 
-lines, hzPoly = getViewPolygons(float(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]))
+lines, hzPoly = calcViewPolys(float(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]))
 
 print(json.dumps({
     "pl": lines,
