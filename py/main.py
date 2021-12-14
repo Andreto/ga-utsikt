@@ -122,11 +122,11 @@ def plotProfile(points, maxElev):
 
     #Create plot
     exportPointsToCSV([xPlot, hPlot, cPlot])
-    #fig = px.scatter(x=xPlot, y=hPlot, color=cPlot)
-    #fig.show()
+    fig = px.scatter(x=xPlot, y=hPlot, color=cPlot)
+    fig.show()
 
 
-def getViewLine(startLon, startLat, v, tile): #Returns a polyline object representing visible areas
+def getViewLine(startLon, startLat, v, tile, viewHeight): #Returns a polyline object representing visible areas
 
     tLon, tLat, pX, pY = coordToTileIndex(startLon, startLat)
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))[str(tLon) + "_" + str(tLat)]
@@ -134,8 +134,8 @@ def getViewLine(startLon, startLat, v, tile): #Returns a polyline object represe
     #points = getLinePointsAndCoords(tile, tLon, tLat, pX, pY, pX, 0)
     points, coords = getLinePointsAndCoords(tile, tLon, tLat, pX, pY, v)
 
-    #if (v == (5/4)*math.pi): 
-       # plotProfile(points, maxElev)
+    if (v == (5/4)*math.pi): 
+        plotProfile(points, maxElev)
 
 
     latlngs = []
@@ -182,9 +182,10 @@ def getViewLine(startLon, startLat, v, tile): #Returns a polyline object represe
 
     return(latlngs)
 
-def getViewPolygons(startLon, startLat, res):
+def getViewPolygons(startLon, startLat, res, viewHeight):
     lines = [] # Sightlines
     hzPoly = [] # Horizon polygon
+
 
     tLon, tLat, pX, pY = coordToTileIndex(startLon, startLat)
 
@@ -192,7 +193,7 @@ def getViewPolygons(startLon, startLat, res):
     tile = rasterio.open(demPath + "/dem_" + str(tLon) + "_" + str(tLat) +  ".tif").read()[0]
 
     for i in range(res):
-        line = getViewLine(float(startLon), float(startLat), (2*math.pi/res)*i, tile)
+        line = getViewLine(float(startLon), float(startLat), (2*math.pi/res)*i, tile, viewHeight)
         for l in line:
             lines.append(l)
         hzPoly.append(line[-1][-1])
@@ -208,7 +209,7 @@ def inBounds(x, y, top, left, bottom, right):
     return(x >= left and x <= right and y >= top and y <= bottom)
 
 
-def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf): #Returns a polyline object representing visible areas
+def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight): #Returns a polyline object representing visible areas
 
 
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))[tilename]
@@ -284,7 +285,7 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf): #Returns a polyline o
 
     
 
-def calcViewPolys(startLon, startLat, res):
+def calcViewPolys(startLon, startLat, res, viewHeight):
     lines = [] # Sightlines
     hzPoly = [] # Horizon polygon
     vMax = [-4] * res # Max angel for each direction
@@ -314,7 +315,7 @@ def calcViewPolys(startLon, startLat, res):
             pX = point["p"]["x"] ; pY = point["p"]["y"]
             v = point["start"]["v"] ; lSurf = point["start"]["lSurf"]
             for di in point["di"]:
-                line, ex = calcViewLine(pX, pY, di, tile, tilename, v, lSurf)
+                line, ex = calcViewLine(pX, pY, di, tile, tilename, v, lSurf, viewHeight)
                 for l in line:
                     lines.append(l)
                 if ex != 0:

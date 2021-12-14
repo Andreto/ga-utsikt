@@ -57,9 +57,10 @@ function loadMapData(latlng) {
     mapLogElem.classList.remove('error');
 
     var calcResolution = document.getElementById('resInput').value;
+    var observerHeight = document.getElementById('obshInput').value;
 
     console.log('http://localhost:3000/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] +'&res=' + calcResolution);
-    fetch('http://localhost:3000/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] +'&res=' + calcResolution)
+    fetch('http://localhost:3000/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight)
     .then(response => response.json()).then(data => {
         console.log(data.toString())
         if (pl) { pl.remove(map) }
