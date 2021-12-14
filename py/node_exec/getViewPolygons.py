@@ -20,11 +20,12 @@ start = time.time()
 
 
 
-lines, hzPoly = calcViewPolys(float(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]))
+lines, hzPoly, exInfo = calcViewPolys(float(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]))
 
 print(json.dumps({
     "pl": lines,
-    "hz": hzPoly
+    "hz": hzPoly,
+    "info": exInfo
 }))
 
 end = time.time()

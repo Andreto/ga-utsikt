@@ -69,6 +69,9 @@ function loadMapData(latlng) {
         hz = L.polygon(data['hz'], {color: '#E06C75', weight: 1, fillOpacity: 0,}).addTo(map);
         mapElem.classList.remove('loading');
         mapLoaderElem.classList.remove('show');
+        for (info in data['info']) {
+            console.log(data['info'][info]);
+        }
     }).catch((err) => {
         mapLogElem.innerHTML = err.message;
         mapLogElem.classList.add('error');

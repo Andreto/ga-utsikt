@@ -30,7 +30,7 @@ for path in lookupPaths:
 if (demPath != ""):
     demList = os.listdir(demPath)
     for i in range(len(demList)):
-        demList[i] = list(map(int, demList[i].strip(".tif").split("_")[1:3]))
+        demList[i] = demList[i].strip(".tif").strip("dem_")
     if (len(demList) < 100):
         warnList.append("demtiles-folder only contained " + str(len(demList)) + " tiles")
 else:

@@ -200,7 +200,7 @@ def getViewPolygons(startLon, startLat, res, viewHeight):
         
     hzPoly.append(hzPoly[0]) # Close polygon
 
-    return(lines, hzPoly)
+    return(lines, hzPoly, [])
 
 def tileId(tLon, tLat):
     return(str(tLon) + "_" + str(tLat))
@@ -209,7 +209,7 @@ def inBounds(x, y, top, left, bottom, right):
     return(x >= left and x <= right and y >= top and y <= bottom)
 
 
-def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight): #Returns a polyline object representing visible areas
+def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles): #Returns a polyline object representing visible areas
 
 
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))[tilename]
@@ -268,12 +268,12 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight): #Returns 
         lSurf += 1
         pY += math.sin(di); pX += math.cos(di)
 
+    tLon, tLat, stX, stY = coordToTileIndex(*tileNameIndexToCoord(tilename, round(pX), round(pY)))
     if hBreak:
-        return(latlngs, 0)
-    else:
+        return(latlngs, 0, "")
+    elif tileId(tLon, tLat) in demTiles:
   #      print("pxy", pX, pY)
   #      print(tileNameIndexToCoord(tilename, round(pX), round(pY)))
-        tLon, tLat, stX, stY = coordToTileIndex(*tileNameIndexToCoord(tilename, round(pX), round(pY)))
   #      print("stxy",tLon, tLat, stX, stY)
         return(latlngs, [tileId(tLon, tLat),
             {
@@ -282,15 +282,21 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight): #Returns 
                 "start": {"v": vMax, "lSurf": lSurf}
             }
         ])
+    else:
+        return(latlngs, 2, ["warn", "Some of the view is not visible due to the lack of DEM data"])
 
     
 
 def calcViewPolys(startLon, startLat, res, viewHeight):
     lines = [] # Sightlines
     hzPoly = [] # Horizon polygon
+    exInfo = [] # Extra info about the execution
     vMax = [-4] * res # Max angel for each direction
 
-    demPath = json.load(open("./serverParameters/demfiles.json", "r"))["path"]
+    demFileData = json.load(open("./serverParameters/demfiles.json", "r"))
+    demPath = demFileData["path"]
+    demTiles = demFileData["tiles"]
+    
 
     tLon, tLat, startX, startY = coordToTileIndex(startLon, startLat)
 
@@ -315,14 +321,16 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
             pX = point["p"]["x"] ; pY = point["p"]["y"]
             v = point["start"]["v"] ; lSurf = point["start"]["lSurf"]
             for di in point["di"]:
-                line, ex = calcViewLine(pX, pY, di, tile, tilename, v, lSurf, viewHeight)
+                line, status, ex = calcViewLine(pX, pY, di, tile, tilename, v, lSurf, viewHeight, demTiles)
                 for l in line:
                     lines.append(l)
-                if ex != 0:
+                if status == 1:
                     if ex[0] in queue:
                         queue[ex[0]].append(ex[1])
                     else:
                         queue[ex[0]] = [ex[1]]
+                elif status == 2:
+                    exInfo.append(ex)
 
 
                 
@@ -331,7 +339,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
         del queue[tilename]
 
 
-    return(lines, hzPoly)
+    return(lines, hzPoly, exInfo)
 
 
 
