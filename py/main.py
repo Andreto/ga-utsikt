@@ -22,6 +22,9 @@ import worldfiles as wf
 earthRadius = 6371000 #meters
 viewHeight = 2 #meters
 
+equatorRadius = 6378137
+poleRadius = 6356752
+
 wmTOeu = proj.Transformer.from_crs("epsg:4326", "epsg:3035", always_xy=True)
 euTOwm = proj.Transformer.from_crs("epsg:3035", "epsg:4326", always_xy=True)
 
@@ -48,6 +51,15 @@ def getTileArea(tLon, tLat):
     for itt in range(len(latlngs)):
         latlngs[itt].reverse()
     return(latlngs)
+
+def radiusCalculation(lat):
+    lat = lat*(math.pi/180)
+    R = math.sqrt(
+        (((equatorRadius**2)*(math.cos(lat)))**2 + ((poleRadius**2)*(math.sin(lat)))**2)
+        /
+        (((equatorRadius)*(math.cos(lat)))**2 + ((poleRadius)*(math.sin(lat)))**2)
+    )
+    return(R)
 
 def getLinePoints(tile, startX, startY, endX, endY):
     points = []
