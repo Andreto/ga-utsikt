@@ -275,7 +275,7 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
   #      print("pxy", pX, pY)
   #      print(tileNameIndexToCoord(tilename, round(pX), round(pY)))
   #      print("stxy",tLon, tLat, stX, stY)
-        return(latlngs, [tileId(tLon, tLat),
+        return(latlngs, 1, [tileId(tLon, tLat),
             {
                 "p": {"x": stX, "y": stY},
                 "di": [di],
