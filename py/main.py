@@ -222,8 +222,6 @@ def inBounds(x, y, top, left, bottom, right):
 
 
 def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles): #Returns a polyline object representing visible areas
-
-
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))[tilename]
 
 #    print(pY, pX)
@@ -236,6 +234,9 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
     h0 = tile[pY, pX]
     hBreak = False
 
+    lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
+    startRadius = radiusCalculation(lat)
+
     while inBounds(pX, pY, 0, 0, 3999, 3999):
         # i # the tile-pixel-index; x-position relative to the ellipsoid edge. i*25 is the length in meters.
         # h # the surface-height perpendicular to the ellipsoid.
@@ -244,12 +245,14 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
         
         if h < -1000 : h = 0 
 
+        lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
+        pRadius = radiusCalculation(lat)
 
-        x = math.sin((lSurf*25)/(earthRadius))*earthRadius # Account for the earths curvature droping of
-        curveShift = math.sqrt(earthRadius**2 - x**2)-earthRadius # Shift in absolute y-position due to earths curvature
-        x -= math.sin((lSurf*25)/(earthRadius))*h # Account for the hight data being perpendicular to the earths surface
-        
-        y = math.cos((lSurf*25)/(earthRadius))*h + curveShift - h0 - viewHeight
+        x = math.sin((lSurf*25)/(pRadius))*pRadius # Account for the earths curvature droping of
+        curveShift = math.sqrt(pRadius**2 - x**2)-startRadius # Shift in absolute y-position due to earths curvature
+        x -= math.sin((lSurf*25)/(pRadius))*h # Account for the hight data being perpendicular to the earths surface
+
+        y = math.cos((lSurf*25)/(pRadius))*h + curveShift - h0 - viewHeight
 
         #Detect visibility
         v = math.atan(x and y / x or 0)
