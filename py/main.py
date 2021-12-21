@@ -19,12 +19,12 @@ import worldfiles as wf
 # Longitude = X ; Latitude = Y
 
 
+#Define ellipsoid properties
 earthRadius = 6371000 #meters
-viewHeight = 2 #meters
-
 equatorRadius = 6378137
 poleRadius = 6356752
 
+#Define projection-conversions
 wmTOeu = proj.Transformer.from_crs("epsg:4326", "epsg:3035", always_xy=True)
 euTOwm = proj.Transformer.from_crs("epsg:3035", "epsg:4326", always_xy=True)
 
@@ -41,6 +41,7 @@ def coordToTileIndex(lon, lat):
     x, y = round((lon-(tLon*100000))/25), round(3999-((lat-(tLat*100000))/25))
     return(tLon, tLat, x, y)
 
+# Returns a leaflet polyline representing the edge of a tile
 def getTileArea(tLon, tLat):
     latlngs = []
     latlngs.append([*euTOwm.transform(tLon*100000, tLat*100000)])
@@ -52,8 +53,9 @@ def getTileArea(tLon, tLat):
         latlngs[itt].reverse()
     return(latlngs)
 
+# Calculates the earths radius at a given latitude
 def radiusCalculation(lat):
-    lat = lat*(math.pi/180)
+    lat = lat*(math.pi/180) # Convert to radians
     R = (
         (equatorRadius*poleRadius)
         /
