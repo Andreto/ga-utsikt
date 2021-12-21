@@ -208,7 +208,6 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     lines = [] # Sightlines
     hzPoly = [] # Horizon polygon
     exInfo = [] # Extra info about the execution
-    vMax = [-4] * res # Max angel for each direction
 
     demFileData = json.load(open("./serverParameters/demfiles.json", "r"))
     demPath = demFileData["path"]
