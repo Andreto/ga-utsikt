@@ -126,6 +126,14 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
     lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
     startRadius = radiusCalculation(lat)
 
+    #the change between calculationpoints should be at least 1 full pixel in x or y direction
+    if math.cos(di) > math.sin(di):
+        xChange = (math.cos(di)/abs(math.cos(di))) if math.cos(di) != 0 else 0
+        yChange = abs(math.cos(di)*math.tan(di)) * ((math.sin(di)/abs(math.sin(di))) if math.sin(di) != 0 else 0)
+    else:
+        yChange = math.sin(di)/abs(math.sin(di)) if math.sin(di) != 0 else 0
+        xChange = (abs(math.cos(di)/math.tan(di)) if math.tan(di) != 0 else 1) * ((math.cos(di)/abs(math.cos(di))) if math.cos(di) != 0 else 0)
+
     while inBounds(pX, pY, 0, 0, 3999, 3999):
         # i # the tile-pixel-index; x-position relative to the ellipsoid edge. i*25 is the length in meters.
         # h # the surface-height perpendicular to the ellipsoid.
@@ -171,6 +179,7 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
 
         lSurf += 1
         pY += math.sin(di); pX += math.cos(di)
+        #pY += yChange; pX += xChange
 
     tLon, tLat, stX, stY = coordToTileIndex(*tileNameIndexToCoord(tilename, round(pX), round(pY)))
     if hBreak:
