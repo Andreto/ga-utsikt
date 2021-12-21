@@ -94,13 +94,14 @@ def getLinePointsAndCoords(tile, tLon, tLat, startX, startY, v):
     return(points, coords)
 
 def exportPointsToCSV(data):
-    with open("temp/plotPoints.csv", "w+") as f:
-        f.write("sep=,\n")
-        for i in range(len(data[0])):
-            for d in range(len(data)):
-                f.write(str(data[d][i]))
-                if d != len(data) - 1:
-                    f.write(",")
+    # [row][col]
+    with open("temp/plotPoints.csv", "a+") as f:
+        f.write("sep=;\n")
+        for i in range(len(data)):
+            for j in range(len(data[i])):
+                f.write(str(data[i][j]).replace(".", ","))
+                if j != len(data[i]) - 1:
+                    f.write(";")
             f.write("\n")
 
 def tileId(tLon, tLat):
@@ -109,11 +110,10 @@ def tileId(tLon, tLat):
 def inBounds(x, y, top, left, bottom, right):
     return(x >= left and x <= right and y >= top and y <= bottom)
 
-
-def calcViewLine(tile, point, tilename, viewHeight, demTiles): #Returns a polyline object representing visible areas
+#Returns a leaflet polyline object representing visible areas
+def calcViewLine(tile, point, tilename, viewHeight, demTiles): 
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))[tilename]
 
-#    print(pY, pX)
     pX = point["p"]["x"]; pY = point["p"]["y"]
     di = point["di"]
     vMax = point["start"]["v"]; lSurf = point["start"]["lSurf"]
@@ -123,7 +123,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles): #Returns a polyli
     lladd = [] # Stores consecutive points to be added to the latlngs list
     llon = False # Keeps track of whether the last point was added to the latlngs list
 
-    h0 = tile[pY, pX] # Elevation of the first point
+    h0 = tile[pY, pX] if tile[pY, pX] > -1000 else 0 # Elevation of the first point
     hBreak = False # Keeps track of whether the calculation stopped due to max elevation being reached
 
     lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY)) # Longitude, Latitude of the first point (in degrees)
@@ -139,15 +139,13 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles): #Returns a polyli
         xChange = (1/math.tan(di)) * (math.cos(di)/abs(math.cos(di)) if math.cos(di) else 0)
 
     while inBounds(pX, pY, 0, 0, 3999, 3999):
-        # i # the tile-pixel-index; x-position relative to the ellipsoid edge. i*25 is the length in meters.
         # h # the surface-height perpendicular to the ellipsoid.
         # x # absolute x-position
-        h = tile[round(pY), round(pX)]
-        
+        h = tile[round(pY), round(pX)]  
         if h < -1000 : h = 0 
 
         lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
-        pRadius = radiusCalculation(lat)
+        pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
 
         x = math.sin((lSurf*25)/(pRadius))*pRadius # Account for the earths curvature droping of
         curveShift = math.sqrt(pRadius**2 - x**2)-startRadius # Shift in absolute y-position due to earths curvature
@@ -155,10 +153,11 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles): #Returns a polyli
 
         y = math.cos((lSurf*25)/(pRadius))*h + curveShift - h0 - viewHeight
 
-        #Detect visibility
+        # Detect visibility
         v = math.atan(x and y / x or 0)
         
-        if v >= vMax and x > 0:
+        if v > vMax and x > 0:
+            # Point is visible, add it to the current line (lladd)
             chords = [*euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))]
             chords.reverse()
             if llon:
@@ -172,11 +171,12 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles): #Returns a polyli
 
             vMax = v
         elif llon:
+            # Point is not visible, break and append the current line (lladd) to the latlngs list
             latlngs.append(lladd)
             llon = False
             lladd = []
 
-        requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
+        requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight # Elevation required to see a point with the current angle
         if requiredElev > maxElev:
             hBreak = True
             break
@@ -209,16 +209,17 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     hzPoly = [] # Horizon polygon
     exInfo = [] # Extra info about the execution
 
+    # Open the DEM information file
     demFileData = json.load(open("./serverParameters/demfiles.json", "r"))
     demPath = demFileData["path"]
     demTiles = demFileData["tiles"]
     
-
+    # Calculate the startingpoints tile, and index within that tile
     tLon, tLat, startX, startY = coordToTileIndex(startLon, startLat)
-
     startTileId = tileId(tLon, tLat)
-    queue = {startTileId: []}
+    queue = {startTileId: []} # Prepere the queue
 
+    # Add all directions for the starting point to the queue
     for i in range(res):
         queue[startTileId].append(
             {
@@ -229,18 +230,21 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
         )
 
 
-
-
     while (len(queue) > 0):
+        # Get the next tile to process
         tilename = list(queue)[0]
         element = queue[tilename]
         tile = rasterio.open(demPath + "/dem_" + tilename +  ".tif").read()[0]
- #       print("element", element)
+
+        # Process all (starting points and directions) in queue for the current tile
         for point in element:
- #           print("point: ", point)
             line, status, ex = calcViewLine(tile, point, tilename, viewHeight, demTiles)
+
+            # Add visible lines to the lines list
             for l in line:
                 lines.append(l)
+            
+            # Add next starting points to the queue or add execution info to the exInfo list
             if status == 1:
                 if ex[0] in queue:
                     queue[ex[0]].append(ex[1])
@@ -249,9 +253,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
             elif status == 2:
                 exInfo.append(ex)
 
-
         del queue[tilename]
-
 
     return(lines, hzPoly, exInfo)
 
