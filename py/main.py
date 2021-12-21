@@ -38,7 +38,7 @@ def tileNameIndexToCoord(tilename, x, y):
 def coordToTileIndex(lon, lat):
     #lon, lat = lon-12.5, lat+12.5 # Adjust for tif-grid coordinates being referenced top-right instead of center # !!!!Important, To do
     tLon, tLat = math.floor(lon/100000), math.floor(lat/100000)
-    x, y = round((lon-(tLon*100000))/25), round((100000-(lat-(tLat*100000)))/25)-1
+    x, y = round((lon-(tLon*100000))/25), round(3999-((lat-(tLat*100000))/25))
     return(tLon, tLat, x, y)
 
 def getTileArea(tLon, tLat):
@@ -304,3 +304,4 @@ def main():
 
 ###### MAIN EXC ######
 
+#print(radiusCalculation(58.2))

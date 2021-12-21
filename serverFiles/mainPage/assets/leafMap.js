@@ -23,7 +23,7 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 
 // Create map-marker and tile bounding-box
 
-var calcLocation = L.marker([59.5587, 13.8991], {
+var calcLocation = L.marker([59.33, 18.07], {
     color: '#FB5258',
 }).addTo(map);
 
@@ -44,8 +44,8 @@ function onMapClick(e) {
     chETRS = [Math.round(chETRS[0]/25)*25, Math.round(chETRS[1]/25)*25];
     chWGS = proj4('ETRS89', 'WGS84', chETRS);
     calcLocation.setLatLng(chWGS.reverse());
-    document.getElementById('lat-disp').innerText = chWGS[1].toFixed(6);
-    document.getElementById('lon-disp').innerText = chWGS[0].toFixed(6);
+    document.getElementById('lat-disp').innerText = chWGS[0].toFixed(6);
+    document.getElementById('lon-disp').innerText = chWGS[1].toFixed(6);
     calcChoordsETRS = chETRS;
     console.log(calcChoordsETRS);
 }
