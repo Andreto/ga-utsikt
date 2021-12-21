@@ -54,10 +54,10 @@ def getTileArea(tLon, tLat):
 
 def radiusCalculation(lat):
     lat = lat*(math.pi/180)
-    R = math.sqrt(
-        (((equatorRadius**2)*(math.cos(lat)))**2 + ((poleRadius**2)*(math.sin(lat)))**2)
+    R = (
+        (equatorRadius*poleRadius)
         /
-        (((equatorRadius)*(math.cos(lat)))**2 + ((poleRadius)*(math.sin(lat)))**2)
+        (math.sqrt((poleRadius*math.cos(lat))**2 + (equatorRadius*math.sin(lat)**2)))
     )
     return(R)
 
