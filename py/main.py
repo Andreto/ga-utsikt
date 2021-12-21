@@ -110,10 +110,13 @@ def inBounds(x, y, top, left, bottom, right):
     return(x >= left and x <= right and y >= top and y <= bottom)
 
 
-def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles): #Returns a polyline object representing visible areas
+def calcViewLine(tile, point, tilename, viewHeight, demTiles): #Returns a polyline object representing visible areas
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))[tilename]
 
 #    print(pY, pX)
+    pX = point["p"]["x"]; pY = point["p"]["y"]
+    di = point["di"]
+    vMax = point["start"]["v"]; lSurf = point["start"]["lSurf"]
 
     latlngs = [] # List of lines to visualize the view
 
@@ -124,15 +127,16 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
     hBreak = False # Keeps track of whether the calculation stopped due to max elevation being reached
 
     lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY)) # Longitude, Latitude of the first point (in degrees)
-    startRadius = radiusCalculation(lat) # Radius of the first point (in meters)
+    
+    startRadius = point["start"]["radius"] if point["start"]["radius"] else radiusCalculation(lat) # Earths radius in the first point (in meters)
 
     #The change between calculationpoints should be at least 1 full pixel in x or y direction
-    if math.cos(di) > math.sin(di):
-        xChange = (math.cos(di)/abs(math.cos(di))) if math.cos(di) != 0 else 0
-        yChange = abs(math.cos(di)*math.tan(di)) * ((math.sin(di)/abs(math.sin(di))) if math.sin(di) != 0 else 0)
+    if abs(math.cos(di)) > abs(math.sin(di)):
+        xChange = (math.cos(di)/abs(math.cos(di)))
+        yChange = math.tan(di) * (math.sin(di)/abs(math.sin(di)) if math.sin(di) else 0)
     else:
-        yChange = math.sin(di)/abs(math.sin(di)) if math.sin(di) != 0 else 0
-        xChange = (abs(math.cos(di)/math.tan(di)) if math.tan(di) != 0 else 1) * ((math.cos(di)/abs(math.cos(di))) if math.cos(di) != 0 else 0)
+        yChange = (math.sin(di)/abs(math.sin(di)))
+        xChange = (1/math.tan(di)) * (math.cos(di)/abs(math.cos(di)) if math.cos(di) else 0)
 
     while inBounds(pX, pY, 0, 0, 3999, 3999):
         # i # the tile-pixel-index; x-position relative to the ellipsoid edge. i*25 is the length in meters.
@@ -191,8 +195,8 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
         return(latlngs, 1, [tileId(tLon, tLat),
             {
                 "p": {"x": stX, "y": stY},
-                "di": [di],
-                "start": {"v": vMax, "lSurf": lSurf}
+                "di": di,
+                "start": {"v": vMax, "lSurf": lSurf, "radius": startRadius}
             }
         ])
     else:
@@ -213,15 +217,19 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
 
     tLon, tLat, startX, startY = coordToTileIndex(startLon, startLat)
 
-    queue = {
-        tileId(tLon, tLat): [
+    startTileId = tileId(tLon, tLat)
+    queue = {startTileId: []}
+
+    for i in range(res):
+        queue[startTileId].append(
             {
                 "p": {"x": startX, "y": startY}, 
-                "di": list(np.arange(0, math.pi*2, (math.pi*2)/res)),
-                "start": {"v": -4, "lSurf": 0}
+                "di": ((2*math.pi)/res) * i,
+                "start": {"v": -4, "lSurf": 0, "radius": 0}
             }
-        ]
-    }
+        )
+
+
 
 
     while (len(queue) > 0):
@@ -231,22 +239,16 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
  #       print("element", element)
         for point in element:
  #           print("point: ", point)
-            pX = point["p"]["x"] ; pY = point["p"]["y"]
-            v = point["start"]["v"] ; lSurf = point["start"]["lSurf"]
-            for di in point["di"]:
-                line, status, ex = calcViewLine(pX, pY, di, tile, tilename, v, lSurf, viewHeight, demTiles)
-                for l in line:
-                    lines.append(l)
-                if status == 1:
-                    if ex[0] in queue:
-                        queue[ex[0]].append(ex[1])
-                    else:
-                        queue[ex[0]] = [ex[1]]
-                elif status == 2:
-                    exInfo.append(ex)
-
-
-                
+            line, status, ex = calcViewLine(tile, point, tilename, viewHeight, demTiles)
+            for l in line:
+                lines.append(l)
+            if status == 1:
+                if ex[0] in queue:
+                    queue[ex[0]].append(ex[1])
+                else:
+                    queue[ex[0]] = [ex[1]]
+            elif status == 2:
+                exInfo.append(ex)
 
 
         del queue[tilename]
@@ -296,7 +298,7 @@ def main():
     # y, x = proj.transform(proj.Proj('epsg:3035'))
 
     #print(tileIndexToCoord(t[0], t[1], x0, y0), tileIndexToCoord(t[0], t[1], x1, y1))
-    plotProfile(points)
+
 
     #print(wmTOeu.transform(Lon, Lat))
 
