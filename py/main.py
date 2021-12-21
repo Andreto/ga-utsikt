@@ -115,18 +115,18 @@ def calcViewLine(pX, pY, di, tile, tilename, vMax, lSurf, viewHeight, demTiles):
 
 #    print(pY, pX)
 
-    latlngs = []
+    latlngs = [] # List of lines to visualize the view
 
-    lladd = []
-    llon = False
+    lladd = [] # Stores consecutive points to be added to the latlngs list
+    llon = False # Keeps track of whether the last point was added to the latlngs list
 
-    h0 = tile[pY, pX]
-    hBreak = False
+    h0 = tile[pY, pX] # Elevation of the first point
+    hBreak = False # Keeps track of whether the calculation stopped due to max elevation being reached
 
-    lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
-    startRadius = radiusCalculation(lat)
+    lon, lat =  euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY)) # Longitude, Latitude of the first point (in degrees)
+    startRadius = radiusCalculation(lat) # Radius of the first point (in meters)
 
-    #the change between calculationpoints should be at least 1 full pixel in x or y direction
+    #The change between calculationpoints should be at least 1 full pixel in x or y direction
     if math.cos(di) > math.sin(di):
         xChange = (math.cos(di)/abs(math.cos(di))) if math.cos(di) != 0 else 0
         yChange = abs(math.cos(di)*math.tan(di)) * ((math.sin(di)/abs(math.sin(di))) if math.sin(di) != 0 else 0)
