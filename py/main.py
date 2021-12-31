@@ -1,16 +1,18 @@
 # Utsiktsberäkning # Andreas Törnkvist, Moltas Lindell # 2021
 
-import worldfiles as wf
-import rasterio
-import plotly.express as px
-import numpy as np
-import pyproj as proj
 import json
 import math
-from posixpath import lexists
 import sys
+from posixpath import lexists
 
+import numpy as np
+import plotly.express as px
+import pyproj as proj
+import rasterio
 from numpy.lib.function_base import i0
+
+import worldfiles as wf
+
 sys.path.append('./py/__pymodules__')
 
 
@@ -56,17 +58,20 @@ def getTileArea(tLon, tLat):
         latlngs[itt].reverse()
     return(latlngs)
 
-# Calculates the earths radius at a given latitude
 
-
-def radiusCalculation(lat):
+def radiusCalculation(lat):  # Calculates the earths radius at a given latitude :BROKEN:
     lat = lat*(math.pi/180)  # Convert to radians
     R = (
         (equatorRadius*poleRadius)
         /
         (math.sqrt((poleRadius*math.cos(lat))**2 + (equatorRadius*math.sin(lat)**2)))
     )
-    return(R)
+    R_old = math.sqrt( # :TEMP:
+        (((equatorRadius**2)*(math.cos(lat))) **2 + ((poleRadius**2)*(math.sin(lat)))**2)
+        /
+        (((equatorRadius)*(math.cos(lat)))**2 + ((poleRadius)*(math.sin(lat)))**2)
+    )
+    return(R_old)
 
 
 def getLinePoints(tile, startX, startY, endX, endY):
@@ -122,10 +127,10 @@ def tileId(tLon, tLat):
 def inBounds(x, y, top, left, bottom, right):
     return(x >= left and x <= right and y >= top and y <= bottom)
 
+
 # Returns a leaflet polyline object representing visible areas
-
-
 def calcViewLine(tile, point, tilename, viewHeight, demTiles):
+
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))[tilename]
 
     pX = point["p"]["x"]
@@ -133,6 +138,8 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles):
     di = point["di"]
     vMax = point["start"]["v"]
     lSurf = point["start"]["lSurf"]
+
+    exportData = [] # :TEMP:
 
     latlngs = []  # List of lines to visualize the view
 
@@ -152,12 +159,10 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles):
     # The change between calculationpoints should be at least 1 full pixel in x or y direction
     if abs(math.cos(di)) > abs(math.sin(di)):
         xChange = (math.cos(di)/abs(math.cos(di)))
-        yChange = math.tan(di) * (math.sin(di) /
-                                  abs(math.sin(di)) if math.sin(di) else 0)
+        yChange = abs(math.tan(di)) * ((math.sin(di) / abs(math.sin(di))) if math.sin(di) else 0)
     else:
         yChange = (math.sin(di)/abs(math.sin(di)))
-        xChange = (1/math.tan(di)) * (math.cos(di) /
-                                      abs(math.cos(di)) if math.cos(di) else 0)
+        xChange = abs(1/(math.tan(di) if math.tan(di) else 1)) * ((math.cos(di) / abs(math.cos(di))) if math.cos(di) else 0)
 
     while inBounds(pX, pY, 0, 0, 3999, 3999):
         # h # the surface-height perpendicular to the ellipsoid.
@@ -167,33 +172,28 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles):
             h = 0
 
         lon, lat = euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
-        # Earths radius in the current point (in meters)
-        pRadius = radiusCalculation(lat)
-
-        # Account for the earths curvature droping of
-        x = math.sin((lSurf*25)/(pRadius))*pRadius
-        # Shift in absolute y-position due to earths curvature
-        curveShift = math.sqrt(pRadius**2 - x**2)-startRadius
-        # Account for the hight data being perpendicular to the earths surface
-        x -= math.sin((lSurf*25)/(pRadius))*h
-
+        pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
+        
+        # :TODO: Rethink and check the maths
+        x = math.sin((lSurf*25)/(pRadius))*pRadius # Account for the earths curvature droping of
+        curveShift = math.sqrt(pRadius**2 - x**2)-startRadius # Shift in absolute y-position due to earths curvature
+        x -= math.sin((lSurf*25)/(pRadius))*h # Account for the hight data being perpendicular to the earths surface
         y = math.cos((lSurf*25)/(pRadius))*h + curveShift - h0 - viewHeight
 
         # Detect visibility
         v = math.atan(x and y / x or 0)
 
+        exportData.append([x, y, h, ("A" if v > vMax else "B")]) # :TEMP:
+
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
-            chords = [
-                *euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))]
-            chords.reverse()
             if llon:
-                if (len(lladd) > 1):
-                    lladd[1] = chords
+                if len(lladd) > 1:
+                    lladd[1] = [lat, lon]
                 else:
-                    lladd.append(chords)
+                    lladd.append([lat, lon])
             else:
-                lladd.append(chords)
+                lladd.append([lat, lon])
                 llon = True
 
             vMax = v
@@ -206,14 +206,20 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles):
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
         if requiredElev > maxElev:
+            # :TODO: Check multiple tiles for the required elevation
             hBreak = True
             break
 
         lSurf += 1
-        pY += math.sin(di)
-        pX += math.cos(di)
-        #pY += yChange; pX += xChange
+        #pY += math.sin(di) ; pX += math.cos(di) # :TEMP:
+        pY -= yChange; pX += xChange
 
+    
+    exportPointsToCSV(data=exportData) # :TEMP:
+
+    if llon: # Add the current line (lladd) to the latlngs list before returning
+        latlngs.append(lladd)
+    
     tLon, tLat, stX, stY = coordToTileIndex(
         *tileNameIndexToCoord(tilename, round(pX), round(pY)))
     if hBreak:
@@ -257,6 +263,16 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
                 "start": {"v": -4, "lSurf": 0, "radius": 0}
             }
         )
+  #  print("Queue:", queue) # :TEMP:
+   # input("Press Enter to continue...") # :TEMP:
+
+    # queue[startTileId].append( # :TEMP:
+    #     {
+    #         "p": {"x": startX, "y": startY},
+    #         "di": 0,
+    #         "start": {"v": -4, "lSurf": 0, "radius": 0}
+    #     }
+    # )
 
     while (len(queue) > 0):
         # Get the next tile to process
@@ -265,10 +281,9 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
         tile = rasterio.open(demPath + "/dem_" + tilename + ".tif").read()[0]
 
         # Process all (starting points and directions) in queue for the current tile
-        for point in element:
-            line, status, ex = calcViewLine(
-                tile, point, tilename, viewHeight, demTiles)
-
+        while len(element) > 0:
+            point = element.pop(0)
+            line, status, ex = calcViewLine(tile, point, tilename, viewHeight, demTiles)
             # Add visible lines to the lines list
             for l in line:
                 lines.append(l)
@@ -306,8 +321,8 @@ def findHills():
 
     print(len(hSpots))
 
-    from datetime import datetime
     from contextlib import redirect_stdout
+    from datetime import datetime
     with open('temp/py_log.txt', 'w+') as f:
         f.write("-- Log -- \n")
         with redirect_stdout(f):

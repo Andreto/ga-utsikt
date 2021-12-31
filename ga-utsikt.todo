@@ -1,0 +1,8 @@
+
+- [] Fix radiusCalculation function (main.py:62) :BROKEN:
+        Genereringen fungerar ibland inte och det tyder på att det är denna funktions fel.
+        Fel på den nya ekvationen?
+        Kör med konstant jordradie tills vidare
+
+- [] Check multiple tiles for the required elevation (main.py:204) :TODO:
+
