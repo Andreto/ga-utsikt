@@ -153,8 +153,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles):
     # Longitude, Latitude of the first point (in degrees)
     lon, lat = euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
 
-    startRadius = point["start"]["radius"] if point["start"]["radius"] else radiusCalculation(
-        lat)  # Earths radius in the first point (in meters)
+    startRadius = point["start"]["radius"] if point["start"]["radius"] else radiusCalculation(lat)  # Earths radius in the first point (in meters)
 
     # The change between calculationpoints should be at least 1 full pixel in x or y direction
     if abs(math.cos(di)) > abs(math.sin(di)):
