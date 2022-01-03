@@ -30,24 +30,26 @@ euTOwm = proj.Transformer.from_crs("epsg:3035", "epsg:4326", always_xy=True)
 
 
 def tileIndexToCoord(tLon, tLat, x, y):
-    return(tLon*100000 + x*25, (tLat+1)*100000 - y*25)  # Longitude, Latitude
-
-
-def tileNameIndexToCoord(tilename, x, y):
-    tLon, tLat = list(map(int, tilename.split("_")))
-    return(tLon*100000 + x*25, (tLat+1)*100000 - y*25)  # Longitude, Latitude
+    return(tLon*100000 + x*25, (tLat+1)*100000 - (y+1)*25)  # Longitude, Latitude
 
 
 def coordToTileIndex(lon, lat):
-    # lon, lat = lon-12.5, lat+12.5 # Adjust for tif-grid coordinates being referenced top-right instead of center # !!!!Important, To do
+    # lon, lat = lon-12.5, lat+12.5 # Adjust for tif-grid coordinates being referenced top-right instead of center # :TODO:
     tLon, tLat = math.floor(lon/100000), math.floor(lat/100000)
     x, y = round((lon-(tLon*100000))/25), round(3999-((lat-(tLat*100000))/25))
     return(tLon, tLat, x, y)
 
-# Returns a leaflet polyline representing the edge of a tile
+
+def tileId(tLon, tLat): #Convert tile-index (array [x, y]) to tile-id (string "x_y")
+    return(str(tLon) + "_" + str(tLat))
+
+
+def tileIndex(tilename): #Convert tile-id (string "x_y") to tile-index (array [x, y])
+    return(list(map(int, tilename.split("_"))))
 
 
 def getTileArea(tLon, tLat):
+    # Returns a leaflet polyline representing the edge of a tile
     latlngs = []
     latlngs.append([*euTOwm.transform(tLon*100000, tLat*100000)])
     latlngs.append([*euTOwm.transform((tLon+1)*100000, tLat*100000)])
@@ -120,24 +122,48 @@ def exportPointsToCSV(data):
             f.write("\n")
 
 
-def tileId(tLon, tLat):
-    return(str(tLon) + "_" + str(tLat))
-
-
 def inBounds(x, y, top, left, bottom, right):
     return(x >= left and x <= right and y >= top and y <= bottom)
 
 
-# Returns a leaflet polyline object representing visible areas
-def calcViewLine(tile, point, tilename, viewHeight, demTiles):
+def pointSteps(di):
+    # The change between calculationpoints should be at least 1 full pixel in x or y direction
+    if abs(math.cos(di)) > abs(math.sin(di)):
+        xChange = (math.cos(di)/abs(math.cos(di)))
+        yChange = abs(math.tan(di)) * ((math.sin(di) / abs(math.sin(di))) if math.sin(di) else 0)
+    else:
+        yChange = (math.sin(di)/abs(math.sin(di)))
+        xChange = abs(1/(math.tan(di) if math.tan(di) else 1)) * ((math.cos(di) / abs(math.cos(di))) if math.cos(di) else 0)
+    return(xChange, yChange)
 
-    maxElev = json.load(open("./calcData/maxElevations.json", "r"))[tilename]
+
+def nextTileBorder(tilename, x, y, di):
+    xLen = (4000-x) if math.cos(di) > 0 else -1-x
+    yLen = -1-y if math.sin(di) > 0 else (4000-y)
+
+    xCost = abs(xLen / math.cos(di)) if math.cos(di) else 10000
+    yCost = abs(yLen / math.sin(di)) if math.sin(di) else 10000
+
+    if xCost < yCost:
+        nX = x + xLen
+        nY = y + abs(xLen * math.tan(di))*(1 if math.sin(di) > 0 else -1)
+    else:
+        nX = x + abs(yLen / math.tan(di))*(1 if math.cos(di) > 0 else -1)
+        nY = y + yLen
+
+    return(coordToTileIndex(*tileIndexToCoord(*tileIndex(tilename), nX, nY)))
+
+
+# Returns a leaflet polyline object representing visible areas
+def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
     pX = point["p"]["x"]
     pY = point["p"]["y"]
     di = point["di"]
     vMax = point["start"]["v"]
     lSurf = point["start"]["lSurf"]
+
+    tileMaxElev = maxElev[tilename]
 
     exportData = [] # :TEMP:
 
@@ -155,13 +181,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles):
 
     startRadius = point["start"]["radius"] if point["start"]["radius"] else radiusCalculation(lat)  # Earths radius in the first point (in meters)
 
-    # The change between calculationpoints should be at least 1 full pixel in x or y direction
-    if abs(math.cos(di)) > abs(math.sin(di)):
-        xChange = (math.cos(di)/abs(math.cos(di)))
-        yChange = abs(math.tan(di)) * ((math.sin(di) / abs(math.sin(di))) if math.sin(di) else 0)
-    else:
-        yChange = (math.sin(di)/abs(math.sin(di)))
-        xChange = abs(1/(math.tan(di) if math.tan(di) else 1)) * ((math.cos(di) / abs(math.cos(di))) if math.cos(di) else 0)
+    xChange, yChange = pointSteps(di)
 
     while inBounds(pX, pY, 0, 0, 3999, 3999):
         # h # the surface-height perpendicular to the ellipsoid.
@@ -204,7 +224,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles):
 
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
-        if requiredElev > maxElev:
+        if requiredElev > tileMaxElev:
             # :TODO: Check multiple tiles for the required elevation
             hBreak = True
             break
@@ -243,10 +263,11 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     hzPoly = []  # Horizon polygon
     exInfo = []  # Extra info about the execution
 
-    # Open the DEM information file
+    # Open the DEM information files
     demFileData = json.load(open("./serverParameters/demfiles.json", "r"))
     demPath = demFileData["path"]
     demTiles = demFileData["tiles"]
+    maxElev = json.load(open("./calcData/maxElevations.json", "r"))
 
     # Calculate the startingpoints tile, and index within that tile
     tLon, tLat, startX, startY = coordToTileIndex(startLon, startLat)
@@ -282,7 +303,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
         # Process all (starting points and directions) in queue for the current tile
         while len(element) > 0:
             point = element.pop(0)
-            line, status, ex = calcViewLine(tile, point, tilename, viewHeight, demTiles)
+            line, status, ex = calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev)
             # Add visible lines to the lines list
             for l in line:
                 lines.append(l)
