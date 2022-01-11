@@ -66,13 +66,13 @@ def radiusCalculation(lat):  # Calculates the earths radius at a given latitude 
     R = (
         (equatorRadius*poleRadius)
         /
-        (math.sqrt((poleRadius*math.cos(lat))**2 + (equatorRadius*math.sin(lat)**2)))
+        math.sqrt((poleRadius*math.cos(lat))**2 + ((equatorRadius*math.sin(lat))**2))
     )
-    R_old = math.sqrt( # :TEMP:
-        (((equatorRadius**2)*(math.cos(lat))) **2 + ((poleRadius**2)*(math.sin(lat)))**2)
-        /
-        (((equatorRadius)*(math.cos(lat)))**2 + ((poleRadius)*(math.sin(lat)))**2)
-    )
+    # R_old = math.sqrt( # :TEMP:
+    #     (((equatorRadius**2)*(math.cos(lat))) **2 + ((poleRadius**2)*(math.sin(lat)))**2)
+    #     /
+    #     (((equatorRadius)*(math.cos(lat)))**2 + ((poleRadius)*(math.sin(lat)))**2)
+    # )
     return(R)
 
 
@@ -187,7 +187,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         # h # the surface-height perpendicular to the ellipsoid.
         # x # absolute x-position
         h = tile[round(pY), round(pX)]
-        if h < -1000:
+        if h < -1000: 
             h = 0
 
         lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
@@ -195,14 +195,15 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         
         # :TODO: Rethink and check the maths
         x = math.sin((lSurf*25)/(pRadius))*pRadius # Account for the earths curvature droping of
-        curveShift = math.sqrt(pRadius**2 - x**2)-startRadius # Shift in absolute y-position due to earths curvature
+        curveShift = math.sqrt(pRadius**2 - x**2) - startRadius # Shift in absolute y-position due to earths curvature
         x -= math.sin((lSurf*25)/(pRadius))*h # Account for the hight data being perpendicular to the earths surface
         y = math.cos((lSurf*25)/(pRadius))*h + curveShift - h0 - viewHeight
 
         # Detect visibility
         v = math.atan(x and y / x or 0)
 
-        exportData.append([x, y, h, ("A" if v > vMax else "B")]) # :TEMP:
+        #exportData.append([x, y, h, ("A" if v > vMax else "B")]) # :TEMP:
+        exportData.append([curveShift, x]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -234,7 +235,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         pY -= yChange; pX += xChange
 
     
-    exportPointsToCSV(data=exportData) # :TEMP:
+    #exportPointsToCSV(data=exportData) # :TEMP:
 
     if llon: # Add the current line (lladd) to the latlngs list before returning
         latlngs.append(lladd)
@@ -283,16 +284,19 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
                 "start": {"v": -4, "lSurf": 0, "radius": 0}
             }
         )
-  #  print("Queue:", queue) # :TEMP:
-   # input("Press Enter to continue...") # :TEMP:
+    #print("Queue:", queue) # :TEMP:
+    #input("Press Enter to continue...") # :TEMP:
 
     # queue[startTileId].append( # :TEMP:
     #     {
     #         "p": {"x": startX, "y": startY},
-    #         "di": 0,
+    #         "di": (((3/2)*math.pi)),
     #         "start": {"v": -4, "lSurf": 0, "radius": 0}
     #     }
     # )
+
+    
+
 
     while (len(queue) > 0):
         # Get the next tile to process
