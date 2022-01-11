@@ -73,7 +73,7 @@ def radiusCalculation(lat):  # Calculates the earths radius at a given latitude 
         /
         (((equatorRadius)*(math.cos(lat)))**2 + ((poleRadius)*(math.sin(lat)))**2)
     )
-    return(R_old)
+    return(R)
 
 
 def getLinePoints(tile, startX, startY, endX, endY):
@@ -177,7 +177,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     hBreak = False  # Keeps track of whether the calculation stopped due to max elevation being reached
 
     # Longitude, Latitude of the first point (in degrees)
-    lon, lat = euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
+    lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
 
     startRadius = point["start"]["radius"] if point["start"]["radius"] else radiusCalculation(lat)  # Earths radius in the first point (in meters)
 
@@ -190,7 +190,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         if h < -1000:
             h = 0
 
-        lon, lat = euTOwm.transform(*tileNameIndexToCoord(tilename, pX, pY))
+        lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
         pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
         
         # :TODO: Rethink and check the maths
@@ -240,7 +240,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         latlngs.append(lladd)
     
     tLon, tLat, stX, stY = coordToTileIndex(
-        *tileNameIndexToCoord(tilename, round(pX), round(pY)))
+        *tileIndexToCoord(*tileIndex(tilename), round(pX), round(pY)))
     if hBreak:
         return(latlngs, 0, "")
     elif tileId(tLon, tLat) in demTiles:
