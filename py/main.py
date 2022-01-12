@@ -134,7 +134,8 @@ def pointSteps(di):
     else:
         yChange = (math.sin(di)/abs(math.sin(di)))
         xChange = abs(1/(math.tan(di) if math.tan(di) else 1)) * ((math.cos(di) / abs(math.cos(di))) if math.cos(di) else 0)
-    return(xChange, yChange)
+    lChange = math.sqrt(xChange**2 + yChange**2)
+    return(xChange, yChange, lChange)
 
 
 def nextTileBorder(tilename, x, y, di):
@@ -181,7 +182,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
     startRadius = point["start"]["radius"] if point["start"]["radius"] else radiusCalculation(lat)  # Earths radius in the first point (in meters)
 
-    xChange, yChange = pointSteps(di)
+    xChange, yChange, lChange = pointSteps(di)
 
     while inBounds(pX, pY, 0, 0, 3999, 3999):
         # h # the surface-height perpendicular to the ellipsoid.
@@ -230,7 +231,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
             hBreak = True
             break
 
-        lSurf += 1
+        lSurf += lChange
         #pY += math.sin(di) ; pX += math.cos(di) # :TEMP:
         pY -= yChange; pX += xChange
 
