@@ -61,7 +61,7 @@ def getTileArea(tLon, tLat):
     return(latlngs)
 
 
-def radiusCalculation(lat):  # Calculates the earths radius at a given latitude :BROKEN:
+def radiusCalculation(lat):  # Calculates the earths radius at a given latitude
     lat = lat*(math.pi/180)  # Convert to radians
     R = (
         (equatorRadius*poleRadius)
@@ -154,6 +154,12 @@ def nextTileBorder(tilename, x, y, di):
 
     return(coordToTileIndex(*tileIndexToCoord(*tileIndex(tilename), nX, nY)))
 
+def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev): # :TODO:
+    tLonNext, tLatNext, xNext, yNext = nextTileBorder(tilename, x, y, di)
+    tilenameNext = tileId(tLonNext, tLatNext)
+
+    if tilenameNext in demTiles:
+        pass
 
 # Returns a leaflet polyline object representing visible areas
 def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
@@ -203,8 +209,8 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         # Detect visibility
         v = math.atan(x and y / x or 0)
 
-        #exportData.append([x, y, h, ("A" if v > vMax else "B")]) # :TEMP:
-        exportData.append([curveShift, x]) # :TEMP:
+        # exportData.append([x, y, h, ("A" if v > vMax else "B")]) # :TEMP:
+        # exportData.append([curveShift, x]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -226,8 +232,8 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
-        if requiredElev > tileMaxElev:
-            # :TODO: Check multiple tiles for the required elevation
+        if requiredElev > tileMaxElev: # :HERE:
+            checkNextTile(tilename, pX, pY, di, vMax, (h0 + viewHeight), lSurf, demTiles, maxElev)
             hBreak = True
             break
 
@@ -246,9 +252,6 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     if hBreak:
         return(latlngs, 0, "")
     elif tileId(tLon, tLat) in demTiles:
-      #      print("pxy", pX, pY)
-      #      print(tileNameIndexToCoord(tilename, round(pX), round(pY)))
-      #      print("stxy",tLon, tLat, stX, stY)
         return(latlngs, 1, [tileId(tLon, tLat),
                             {
             "p": {"x": stX, "y": stY},
@@ -319,7 +322,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
                     queue[ex[0]].append(ex[1])
                 else:
                     queue[ex[0]] = [ex[1]]
-            elif status == 2:
+            elif status == 2 and ex not in exInfo:
                 exInfo.append(ex)
 
         del queue[tilename]
