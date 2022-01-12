@@ -23,6 +23,7 @@ sys.path.append('./py/__pymodules__')
 earthRadius = 6371000  # meters
 equatorRadius = 6378137
 poleRadius = 6356752
+maxCurveRadius = (equatorRadius**2)/poleRadius # used for efficiently estemating the curveshift on far away tiles
 
 # Define projection-conversions
 wmTOeu = proj.Transformer.from_crs("epsg:4326", "epsg:3035", always_xy=True)
@@ -157,9 +158,20 @@ def nextTileBorder(tilename, x, y, di):
 def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev): # :TODO:
     tLonNext, tLatNext, xNext, yNext = nextTileBorder(tilename, x, y, di)
     tilenameNext = tileId(tLonNext, tLatNext)
+    lSurf += math.sqrt((xNext-x)**2 + (yNext-y)**2)
 
     if tilenameNext in demTiles:
-        pass
+        curveShift = maxCurveRadius - math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius
+        requiredElev = math.sin((lSurf*25)/maxCurveRadius)*math.tan(vMax) + curveShift + hOffset
+        if maxElev[tilenameNext] < requiredElev:
+            if maxElev["global"] < requiredElev:
+                return(0, "")
+            else:
+                return(checkNextTile(tilenameNext, xNext, yNext, di, vMax, hOffset, lSurf, demTiles, maxElev))
+        else:
+            return(1, [tilenameNext, {"x": xNext, "y": xNext}])
+    else:
+        return(2, "")
 
 # Returns a leaflet polyline object representing visible areas
 def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
@@ -179,8 +191,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     lladd = []  # Stores consecutive points to be added to the latlngs list
     llon = False  # Keeps track of whether the last point was added to the latlngs list
 
-    h0 = tile[pY, pX] if tile[pY, pX] > - \
-        1000 else 0  # Elevation of the first point
+    h0 = tile[pY, pX] if tile[pY, pX] > 1000 else 0  # Elevation of the first point
     hBreak = False  # Keeps track of whether the calculation stopped due to max elevation being reached
 
     # Longitude, Latitude of the first point (in degrees)
@@ -233,7 +244,6 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
         if requiredElev > tileMaxElev: # :HERE:
-            checkNextTile(tilename, pX, pY, di, vMax, (h0 + viewHeight), lSurf, demTiles, maxElev)
             hBreak = True
             break
 
@@ -247,10 +257,24 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     if llon: # Add the current line (lladd) to the latlngs list before returning
         latlngs.append(lladd)
     
-    tLon, tLat, stX, stY = coordToTileIndex(
-        *tileIndexToCoord(*tileIndex(tilename), round(pX), round(pY)))
+    tLon, tLat, stX, stY = coordToTileIndex(*tileIndexToCoord(*tileIndex(tilename), round(pX), round(pY)))
     if hBreak:
-        return(latlngs, 0, "")
+        cnCode, cnObj =  checkNextTile(tilename, pX, pY, di, vMax, (h0 + viewHeight), lSurf, demTiles, maxElev)
+        if cnCode == 0:
+            return(latlngs, 0, "")
+        elif cnCode == 1:
+            # print("Next tile:", cnObj[0], "at", cnObj[1], "with dir", di) # :TEMP:
+            return(latlngs, 1, [cnObj[0],
+            {
+            "p": {"x": cnObj[1]["x"], "y": cnObj[1]["y"]},
+            "di": di,
+            "start": {"v": vMax, "lSurf": lSurf, "radius": startRadius}
+            }
+        ])
+        elif cnCode == 2:
+            return(latlngs, 2, ["warn", "Some of the view is not visible due to the lack of DEM data"])
+            
+
     elif tileId(tLon, tLat) in demTiles:
         return(latlngs, 1, [tileId(tLon, tLat),
                             {
