@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <!-- Css imports -->
     <link rel="stylesheet" href="assets/main.css">
+    <!-- Proj4js Import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js" integrity="sha512-MMmVaQGDVI3Wouc5zT5G7k/snN9gPqquIhZsHgIIHVDlRgYTYGxrwu6w482iIhAq8n5R6+pcBgpGgxFFBz7rZA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
     <div class="loader" id="map-loader"></div>
@@ -18,14 +20,16 @@
         <div class="control-panel">
             <button id="calc-button">Calculate</button>
             <div class="control-label">Lat:</div>
-            <div class="control-text" id="lat-disp">13</div>
+            <div class="control-text" id="lat-disp">59.33</div>
             <div class="control-label">Lon:</div>
-            <div class="control-text" id="lon-disp">59</div>
-            <br><span><b>Resolution: </b></span><input type="number" id="resInput" name="Resolution" min="4" max="360" value="40">
+            <div class="control-text" id="lon-disp">18.07</div>
+            <br><span><b>Resolution: </b></span><input type="number" class="control-input-small" id="resInput" name="Resolution" min="4" max="360" value="40">
+            <br><span><b>Observer Height: </b></span><input type="number" class="control-input-small" id="obshInput" name="Obserer Height" value="2">
             <br>
             <div id="map-log" class=""></div>
         </div>
     </div>
+    <script src="assets/testData.js"></script>
     <script src="assets/leafMap.js"></script>
 </body>
 </html>

@@ -34,7 +34,7 @@ app.use('/', express.static('serverFiles/mainPage'))
 
 app.get('/api/p', (req, res) => {
     spawnPythonProc(req, res, 
-        ['./py/node_exec/getViewPolygons.py', req.query.lon, req.query.lat, req.query.res],
+        ['./py/node_exec/getViewPolygons.py', req.query.lon, req.query.lat, req.query.res,  req.query.oh],
         function(req, res, data, code) {
             console.log(`child process closed all stdio with code ${code}`);
             res.send(data);
