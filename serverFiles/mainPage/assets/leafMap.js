@@ -84,6 +84,8 @@ function loadMapData(latlng) {
 // Define event-listeners
 map.on('click', onMapClick);
 
+L.control.scale().addTo(map);
+
 calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())
 });
