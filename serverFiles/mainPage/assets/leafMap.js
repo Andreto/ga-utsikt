@@ -81,8 +81,24 @@ function loadMapData(latlng) {
         });
 }
 
+function onResize(e) {
+    var leafScale = document.getElementsByClassName('leaflet-control-scale-line')[0];
+    var scaleInd = document.getElementById('scale-ind');
+    console.log(leafScale.innerText.split(' '));
+    var lfTxt = leafScale.innerText.split(' ');
+    scaleInd.style.width = (String(parseInt(leafScale.style.width.replace('px', ''))*4)+'px');
+    scaleInd.innerText = String(parseInt(lfTxt[0])*4) + ' ' + lfTxt[1];
+}
+
+var scaleElem = document.createElement('div');
+scaleElem.classList.add('scale-indicator');
+scaleElem.innerHTML = '<div class="scale-indicator-text" id="scale-ind">100 m</div>';
+document.getElementsByClassName('leaflet-control-container')[0].appendChild(scaleElem);
+
 // Define event-listeners
 map.on('click', onMapClick);
+map.on('zoomend', onResize);
+L.control.scale().addTo(map);
 
 calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())

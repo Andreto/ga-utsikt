@@ -29,6 +29,8 @@ maxCurveRadius = (equatorRadius**2)/poleRadius # used for efficiently estemating
 wmTOeu = proj.Transformer.from_crs("epsg:4326", "epsg:3035", always_xy=True)
 euTOwm = proj.Transformer.from_crs("epsg:3035", "epsg:4326", always_xy=True)
 
+exportData = [] # :TEMP:
+
 
 def tileIndexToCoord(tLon, tLat, x, y):
     return(tLon*100000 + x*25, (tLat+1)*100000 - (y+1)*25)  # Longitude, Latitude
@@ -123,6 +125,18 @@ def exportPointsToCSV(data):
             f.write("\n")
 
 
+def plotlyShow(data):
+    xPl = []
+    yPl = []
+    cPl = []
+    for i in range(len(data)):
+        xPl.append(data[i][0])
+        yPl.append(data[i][1])
+        cPl.append(data[i][2])
+    fig = px.scatter(x=xPl, y=yPl, color=cPl)
+    fig.show()
+
+
 def inBounds(x, y, top, left, bottom, right):
     return(x >= left and x <= right and y >= top and y <= bottom)
 
@@ -184,8 +198,6 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
     tileMaxElev = maxElev[tilename]
 
-    exportData = [] # :TEMP:
-
     latlngs = []  # List of lines to visualize the view
 
     lladd = []  # Stores consecutive points to be added to the latlngs list
@@ -219,9 +231,9 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
         # Detect visibility
         v = math.atan(x and y / x or 0)
-
-        # exportData.append([x, y, h, ("A" if v > vMax else "B")]) # :TEMP:
-        # exportData.append([curveShift, x]) # :TEMP:
+        
+        global exportData
+        exportData.append([x, y, ("a" if v > vMax else "b")]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -304,24 +316,24 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     queue = {startTileId: []}  # Prepere the queue
 
     # Add all directions for the starting point to the queue
-    for i in range(res):
-        queue[startTileId].append(
-            {
-                "p": {"x": startX, "y": startY},
-                "di": ((2*math.pi)/res) * i,
-                "start": {"v": -4, "lSurf": 0, "radius": 0}
-            }
-        )
+    # for i in range(res):
+    #     queue[startTileId].append(
+    #         {
+    #             "p": {"x": startX, "y": startY},
+    #             "di": ((2*math.pi)/res) * i,
+    #             "start": {"v": -4, "lSurf": 0, "radius": 0}
+    #         }
+    #     )
     #print("Queue:", queue) # :TEMP:
     #input("Press Enter to continue...") # :TEMP:
 
-    # queue[startTileId].append( # :TEMP:
-    #     {
-    #         "p": {"x": startX, "y": startY},
-    #         "di": (((3/2)*math.pi)),
-    #         "start": {"v": -4, "lSurf": 0, "radius": 0}
-    #     }
-    # )
+    queue[startTileId].append( # :TEMP:
+        {
+            "p": {"x": startX, "y": startY},
+            "di": (((1/8)*math.pi)),
+            "start": {"v": -4, "lSurf": 0, "radius": 0}
+        }
+    )
 
     
 
@@ -351,6 +363,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
 
         del queue[tilename]
 
+    plotlyShow(exportData)
     return(lines, hzPoly, exInfo)
 
 

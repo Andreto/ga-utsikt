@@ -92,10 +92,42 @@ body {
     margin-top: 4px;
 }
 
+.scale-indicator {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    background-color: rgba(255, 255, 255, .5);
+    padding: 4px 10px;
+    z-index: 1000;
+    border-radius: 2px;
+    backdrop-filter: saturate(90%) blur(20px);
+    border-left: 2px solid #000000aa;
+    border-right: 2px solid #000000aa;
+}
 
 textarea:focus, input:focus{
     outline: none;
 }
+
+
+/* Custom leaflet css */
+.leaflet-control-scale-line {
+    display: none;
+}
+.leaflet-container .leaflet-control-attribution {
+    padding: 5px 10px;
+    backdrop-filter: saturate(90%) blur(20px);
+    border-radius: 2px;
+}
+.leaflet-bottom {
+    bottom: 10px;
+}
+.leaflet-right {
+    right: 10px;
+}
+
+
+/* MEDIA QUERIES */
 
 @media only screen and (max-width: 400px) {
     #calc-button {
