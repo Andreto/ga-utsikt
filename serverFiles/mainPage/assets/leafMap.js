@@ -84,7 +84,6 @@ function loadMapData(latlng) {
 function onResize(e) {
     var leafScale = document.getElementsByClassName('leaflet-control-scale-line')[0];
     var scaleInd = document.getElementById('scale-ind');
-    console.log(leafScale.innerText.split(' '));
     var lfTxt = leafScale.innerText.split(' ');
     scaleInd.style.width = (String(parseInt(leafScale.style.width.replace('px', ''))*4)+'px');
     scaleInd.innerText = String(parseInt(lfTxt[0])*4) + ' ' + lfTxt[1];
@@ -104,6 +103,15 @@ calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())
 });
 
+for (const property in hillExport) {
+    item = hillExport[property]
+    x = item.x*25 + 4600000
+    y = item.y*25 + 3900000
+    if(item.h > 200){
+        console.log("Punkt", )
+        L.circle(proj4('ETRS89', 'WGS84', [x, y]).reverse(), {radius: 120, color: '#FB5258'}).addTo(map);
+    }
+}
 
 //d0vis = L.polyline(testData0['pl'], {color: '#AACB41', weight: 4}).addTo(map);
 //d1vis = L.polyline(testData1['pl'], {color: '#519ABA', weight: 2}).addTo(map);
