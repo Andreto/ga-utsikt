@@ -103,6 +103,8 @@ calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())
 });
 
+map.locate({setView: true, maxZoom: 16});
+
 
 //d0vis = L.polyline(testData0['pl'], {color: '#AACB41', weight: 4}).addTo(map);
 //d1vis = L.polyline(testData1['pl'], {color: '#519ABA', weight: 2}).addTo(map);

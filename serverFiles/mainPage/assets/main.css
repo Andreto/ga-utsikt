@@ -105,6 +105,21 @@ body {
     border-right: 2px solid #000000aa;
 }
 
+#locator-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    padding: 4px 4px 0px 4px;
+    background: #fff;
+    border-radius: 4px;
+    z-index: 1000;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.2)
+}
+#locator-button:hover {
+    background: #F4F4F4;
+}
+
 textarea:focus, input:focus{
     outline: none;
 }
