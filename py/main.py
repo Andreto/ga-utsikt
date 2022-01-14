@@ -142,7 +142,7 @@ def inBounds(x, y, top, left, bottom, right):
 
 
 def pointSteps(di):
-    # The change between calculationpoints should be at least 1 full pixel in x or y direction
+    # The change between calculation-points should be at least 1 full pixel in x or y direction
     if abs(math.cos(di)) > abs(math.sin(di)):
         xChange = (math.cos(di)/abs(math.cos(di)))
         yChange = abs(math.tan(di)) * ((math.sin(di) / abs(math.sin(di))) if math.sin(di) else 0)
@@ -151,6 +151,11 @@ def pointSteps(di):
         xChange = abs(1/(math.tan(di) if math.tan(di) else 1)) * ((math.cos(di) / abs(math.cos(di))) if math.cos(di) else 0)
     lChange = math.sqrt(xChange**2 + yChange**2)
     return(xChange, yChange, lChange)
+
+
+def sssAngle(R1, R2, l):
+    cosv = ((R1**2 + R2**2 - l**2)/(2*R1*R2))
+    return(math.acos(cosv) if cosv <= 1 else math.acos(cosv**-1))
 
 
 def nextTileBorder(tilename, x, y, di):
@@ -203,7 +208,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     lladd = []  # Stores consecutive points to be added to the latlngs list
     llon = False  # Keeps track of whether the last point was added to the latlngs list
 
-    h0 = tile[pY, pX] if tile[pY, pX] > 1000 else 0  # Elevation of the first point
+    h0 = tile[pY, pX] if tile[pY, pX] > -1000 else 0  # Elevation of the first point
     hBreak = False  # Keeps track of whether the calculation stopped due to max elevation being reached
 
     # Longitude, Latitude of the first point (in degrees)
@@ -212,6 +217,13 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     startRadius = point["start"]["radius"] if point["start"]["radius"] else radiusCalculation(lat)  # Earths radius in the first point (in meters)
 
     xChange, yChange, lChange = pointSteps(di)
+
+    lastPoint = point["last"] if point["last"] else {
+        "radius": radiusCalculation(lat),
+        "angle": 0
+    }
+
+    calcAngle = lastPoint["angle"]
 
     while inBounds(pX, pY, 0, 0, 3999, 3999):
         # h # the surface-height perpendicular to the ellipsoid.
@@ -223,11 +235,23 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
         pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
         
-        # :TODO: Rethink and check the maths
-        x = math.sin((lSurf*25)/(pRadius))*pRadius # Account for the earths curvature droping of
+        # :HERE:
+        print("a", calcAngle, (lSurf*25)/pRadius)
+        # print(calcAngle) # :TEMP:
+        x = math.sin(calcAngle)*pRadius # Account for the earths curvature droping of
         curveShift = math.sqrt(pRadius**2 - x**2) - startRadius # Shift in absolute y-position due to earths curvature
-        x -= math.sin((lSurf*25)/(pRadius))*h # Account for the hight data being perpendicular to the earths surface
-        y = math.cos((lSurf*25)/(pRadius))*h + curveShift - h0 - viewHeight
+        print("CS", curveShift)
+        x -= math.sin(calcAngle)*h # Account for the hight data being perpendicular to the earths surface
+        y = math.cos(calcAngle)*h + curveShift - h0 - viewHeight
+
+        calcAngle += sssAngle(lastPoint["radius"], pRadius, lChange*25)
+        print("hh", math.cos(calcAngle), h)
+        print("x", x, y, h0)
+
+        lastPoint = {
+            "radius": pRadius,
+            "angle": calcAngle
+        }
 
         # Detect visibility
         v = math.atan(x and y / x or 0)
@@ -255,7 +279,8 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
-        if requiredElev > tileMaxElev: # :HERE:
+        print("v", v, vMax, requiredElev)
+        if requiredElev > tileMaxElev:
             hBreak = True
             break
 
@@ -268,6 +293,13 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
     if llon: # Add the current line (lladd) to the latlngs list before returning
         latlngs.append(lladd)
+
+    queueObj = {
+        "p": {"x": 0, "y": 0},
+        "di": di,
+        "start": {"v": vMax, "lSurf": lSurf, "radius": startRadius},
+        "last": lastPoint
+    }
     
     tLon, tLat, stX, stY = coordToTileIndex(*tileIndexToCoord(*tileIndex(tilename), round(pX), round(pY)))
     if hBreak:
@@ -276,25 +308,15 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
             return(latlngs, 0, "")
         elif cnCode == 1:
             # print("Next tile:", cnObj[0], "at", cnObj[1], "with dir", di) # :TEMP:
-            return(latlngs, 1, [cnObj[0],
-            {
-            "p": {"x": cnObj[1]["x"], "y": cnObj[1]["y"]},
-            "di": di,
-            "start": {"v": vMax, "lSurf": lSurf, "radius": startRadius}
-            }
-        ])
+            queueObj["p"] = {"x": cnObj[1]["x"], "y": cnObj[1]["y"]}
+            return(latlngs, 1, [cnObj[0], queueObj])
         elif cnCode == 2:
             return(latlngs, 2, ["warn", "Some of the view is not visible due to the lack of DEM data"])
             
 
     elif tileId(tLon, tLat) in demTiles:
-        return(latlngs, 1, [tileId(tLon, tLat),
-                            {
-            "p": {"x": stX, "y": stY},
-            "di": di,
-            "start": {"v": vMax, "lSurf": lSurf, "radius": startRadius}
-        }
-        ])
+        queueObj["p"] = {"x": stX, "y": stY}
+        return(latlngs, 1, [tileId(tLon, tLat), queueObj])
     else:
         return(latlngs, 2, ["warn", "Some of the view is not visible due to the lack of DEM data"])
 
@@ -321,7 +343,8 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     #         {
     #             "p": {"x": startX, "y": startY},
     #             "di": ((2*math.pi)/res) * i,
-    #             "start": {"v": -4, "lSurf": 0, "radius": 0}
+    #             "start": {"v": -4, "lSurf": 0, "radius": 0},
+    #             "last": 0
     #         }
     #     )
     #print("Queue:", queue) # :TEMP:
@@ -331,13 +354,12 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
         {
             "p": {"x": startX, "y": startY},
             "di": (((1/8)*math.pi)),
-            "start": {"v": -4, "lSurf": 0, "radius": 0}
+            "start": {"v": -4, "lSurf": 0, "radius": 0},
+            "last": 0
         }
     )
 
     
-
-
     while (len(queue) > 0):
         # Get the next tile to process
         tilename = list(queue)[0]
@@ -363,36 +385,8 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
 
         del queue[tilename]
 
-    plotlyShow(exportData)
+    plotlyShow(exportData) # :TEMP:
     return(lines, hzPoly, exInfo)
-
-
-def findHills():
-    t = [46, 39]
-    tile = rasterio.open("./demtiles/dem_" +
-                         str(t[0]) + "_" + str(t[1]) + ".tif").read()[0]
-
-    hSpots = []
-
-    for i in range(1, 3999):
-        if (i % 100 == 0):
-            print(i)
-        for j in range(1, 3999):
-            check = [tile[i][j]]
-
-            h = tile[i][j]
-            if h > tile[i+1][j+1] and h > tile[i+1][j-1] and h > tile[i-1][j-1] and h > tile[i-1][j+1]:
-                hSpots.append([j, i])
-
-    print(len(hSpots))
-
-    from contextlib import redirect_stdout
-    from datetime import datetime
-    with open('temp/py_log.txt', 'w+') as f:
-        f.write("-- Log -- \n")
-        with redirect_stdout(f):
-            print()
-            print(hSpots)
 
 
 def main():
