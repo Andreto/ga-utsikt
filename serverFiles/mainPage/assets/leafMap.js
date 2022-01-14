@@ -84,7 +84,6 @@ function loadMapData(latlng) {
 function onResize(e) {
     var leafScale = document.getElementsByClassName('leaflet-control-scale-line')[0];
     var scaleInd = document.getElementById('scale-ind');
-    console.log(leafScale.innerText.split(' '));
     var lfTxt = leafScale.innerText.split(' ');
     scaleInd.style.width = (String(parseInt(leafScale.style.width.replace('px', ''))*4)+'px');
     scaleInd.innerText = String(parseInt(lfTxt[0])*4) + ' ' + lfTxt[1];

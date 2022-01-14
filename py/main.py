@@ -236,17 +236,13 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
         
         # :HERE:
-        print("a", calcAngle, (lSurf*25)/pRadius)
         # print(calcAngle) # :TEMP:
         x = math.sin(calcAngle)*pRadius # Account for the earths curvature droping of
         curveShift = math.sqrt(pRadius**2 - x**2) - startRadius # Shift in absolute y-position due to earths curvature
-        print("CS", curveShift)
         x -= math.sin(calcAngle)*h # Account for the hight data being perpendicular to the earths surface
         y = math.cos(calcAngle)*h + curveShift - h0 - viewHeight
 
         calcAngle += sssAngle(lastPoint["radius"], pRadius, lChange*25)
-        print("hh", math.cos(calcAngle), h)
-        print("x", x, y, h0)
 
         lastPoint = {
             "radius": pRadius,
@@ -279,7 +275,6 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
-        print("v", v, vMax, requiredElev)
         if requiredElev > tileMaxElev:
             hBreak = True
             break
@@ -338,26 +333,26 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     queue = {startTileId: []}  # Prepere the queue
 
     # Add all directions for the starting point to the queue
-    # for i in range(res):
-    #     queue[startTileId].append(
-    #         {
-    #             "p": {"x": startX, "y": startY},
-    #             "di": ((2*math.pi)/res) * i,
-    #             "start": {"v": -4, "lSurf": 0, "radius": 0},
-    #             "last": 0
-    #         }
-    #     )
+    for i in range(res):
+        queue[startTileId].append(
+            {
+                "p": {"x": startX, "y": startY},
+                "di": ((2*math.pi)/res) * i,
+                "start": {"v": -4, "lSurf": 0, "radius": 0},
+                "last": 0
+            }
+        )
     #print("Queue:", queue) # :TEMP:
     #input("Press Enter to continue...") # :TEMP:
 
-    queue[startTileId].append( # :TEMP:
-        {
-            "p": {"x": startX, "y": startY},
-            "di": (((1/8)*math.pi)),
-            "start": {"v": -4, "lSurf": 0, "radius": 0},
-            "last": 0
-        }
-    )
+    # queue[startTileId].append( # :TEMP:
+    #     {
+    #         "p": {"x": startX, "y": startY},
+    #         "di": (((1/8)*math.pi)),
+    #         "start": {"v": -4, "lSurf": 0, "radius": 0},
+    #         "last": 0
+    #     }
+    # )
 
     
     while (len(queue) > 0):
