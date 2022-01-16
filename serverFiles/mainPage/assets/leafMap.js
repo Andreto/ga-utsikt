@@ -2,6 +2,8 @@ var mapElem = document.getElementById('map');
 var mapLogElem = document.getElementById('map-log');
 var mapLoaderElem = document.getElementById('map-loader');
 var calcButtonElem = document.getElementById('calc-button');
+var locatorButton = document.getElementById('locator-button');
+var locatorSvg = locatorButton.getElementsByClassName('locator-svg')[0];
 
 proj4.defs([
     ['WGS84', '+proj=longlat +datum=WGS84 +no_defs'],
@@ -102,6 +104,15 @@ L.control.scale().addTo(map);
 calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())
 });
+locatorButton.addEventListener('click', function () {
+    locatorSvg.classList.add('spinAnim');
+    map.locate({setView: true, maxZoom: 16});
+});
+locatorSvg.addEventListener('animationend', function () {
+    locatorSvg.classList.remove('spinAnim');
+});
+
+
 
 map.locate({setView: true, maxZoom: 16});
 

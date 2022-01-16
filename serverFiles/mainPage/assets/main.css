@@ -112,7 +112,7 @@ body {
     padding: 4px 4px 0px 4px;
     background: #fff;
     border-radius: 4px;
-    z-index: 1000;
+    z-index: 1001;
     cursor: pointer;
     border: 2px solid rgba(0,0,0,0.2)
 }
@@ -122,6 +122,10 @@ body {
 
 textarea:focus, input:focus{
     outline: none;
+}
+
+.spinAnim {
+    animation: spin .5s ease-in-out;
 }
 
 
