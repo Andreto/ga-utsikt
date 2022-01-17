@@ -54,6 +54,18 @@ app.get('/api/grid', (req, res) => {
     )
 });
 
+app.get('/api/points', (req, res) => {
+    spawnPythonProc(req, res, 
+        ['./py/node_exec/showCsvPoints.py'],
+        function(req, res, data, code) {
+            console.log(`child process closed all stdio with code ${code}`);
+            res.send(data);
+            res.end();
+        }
+    )
+});
+
+
 // Start server
 app.listen(port, () => {
     // Check for errors, warnings, etc

@@ -36,6 +36,14 @@ fetch('http://localhost:3000/api/grid')
             .addTo(map);
     });
 
+fetch('http://localhost:3000/api/points')
+    .then(response => response.json()).then(data => {
+        for (item in data) {
+            console.log("Punkt", data[item])
+            L.circleMarker(data[item], {radius: 20, color: '#FF9900'}).addTo(map);
+        }
+    });
+
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
 
 // When a point on the map is clicked, this point is set as the calculation base-point
@@ -104,15 +112,15 @@ calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())
 });
 
-for (const property in hillExport) {
-    item = hillExport[property]
-    x = item.y*25 + 4600000
-    y = -item.x*25 + 4000000
-    if(item.h > 250){
-        console.log("Punkt", )
-        L.circle(proj4('ETRS89', 'WGS84', [x, y]).reverse(), {radius: 12.5, color: '#FF9900'}).addTo(map);
-    }
-}
+// for (const property in hillExport) {
+//     item = hillExport[property]
+//     x = item.y*25 + 4600000
+//     y = -item.x*25 + 4000000
+//     if(item.h > 250){
+//         console.log("Punkt", )
+//         L.circle(proj4('ETRS89', 'WGS84', [x, y]).reverse(), {radius: 12.5, color: '#FF9900'}).addTo(map);
+//     }
+// }
 
 //d0vis = L.polyline(testData0['pl'], {color: '#AACB41', weight: 4}).addTo(map);
 //d1vis = L.polyline(testData1['pl'], {color: '#519ABA', weight: 2}).addTo(map);
