@@ -1,9 +1,13 @@
+import csv
 import string
 import rasterio
 from contextlib import redirect_stdout
 import json
+import sys
+sys.path.append('./py')
+from main import *
 
-tileSize = 1000
+tileSize = 100
 
 #Returns highest adjacent point
 def highestAdjacentPoint(tile, x, y):
@@ -33,43 +37,53 @@ def xyId(x, y):
     return(str(x) + "_" + str(y))
 
 def exportHills():
-    tileX = 46
-    tileY = 39
 
-    tile = rasterio.open("../../demtiles" + "/dem_" + str(tileX) + "_" + str(tileY) + ".tif").read()[0]
+    #Iterates through tiles
+    for tileY in range(39, 41): #Sweden: 35_52
+        for tileX in range(45, 48): #Sweden: 43_50
 
-    hillExport = {}
-    
-    #Iterates through points within the tile.
-    for y in range(tileSize):
-        if (y % 100 == 0): print(y, "/", tileSize)  #Prints progress
-        for x in range(tileSize):
+            tile = rasterio.open("./demtiles" + "/dem_" + str(tileX) + "_" + str(tileY) + ".tif").read()[0]
+
+            hillExport = {}
             
-            p = {"n": 0, "h": tile[x][y], "x": x, "y": y}
+            #Iterates through points within the tile.
+            for y in range(tileSize):
+                if (y % 500 == 0): print(y, "/", tileSize)  #Prints progress
+                for x in range(tileSize):
+                    
+                    p = {"n": 0, "h": tile[x][y], "x": x, "y": y}
 
-            if (p["h"] < -1000): continue
+                    if (p["h"] < -1000): continue
 
-            pNext = highestAdjacentPoint(tile, x, y)
+                    pNext = highestAdjacentPoint(tile, x, y)
 
-            while(pNext["h"] > p["h"]):
-                p["h"] = pNext["h"]
-                p["x"] = pNext["x"]
-                p["y"] = pNext["y"]
+                    while(pNext["h"] > p["h"]):
+                        p["h"] = pNext["h"]
+                        p["x"] = pNext["x"]
+                        p["y"] = pNext["y"]
 
-                pNext = highestAdjacentPoint(tile, p["x"], p["y"])
+                        pNext = highestAdjacentPoint(tile, p["x"], p["y"])
 
-            if xyId(p["x"], p["y"]) in hillExport:
-                hillExport[xyId(p["x"], p["y"])]["n"] += 1
-            else:
-                p["n"] = 1
-                hillExport[xyId(p["x"], p["y"])] = p
+                    if xyId(p["x"], p["y"]) in hillExport:
+                        hillExport[xyId(p["x"], p["y"])]["n"] += 1
+                    else:
+                        p["n"] = 1
+                        hillExport[xyId(p["x"], p["y"])] = p
 
-    #Remove hills with "n" < 83..?         
+            with open("./hills/hillExport.json", 'w+') as f:
+                with redirect_stdout(f):
+                    print(json.dumps(str(hillExport)))
 
-    print("Exported " + str(len(hillExport)) + " hills.")
+            nHills = 0
 
-    with open("../../temp/hillExport.json", 'w+') as f:
-        with redirect_stdout(f):
-            print(json.dumps(str(hillExport)))
+            with open("./hills/hillPoints_" + str(tileX) + "_" + str(tileY) + ".csv", "w+") as f:
+                for key in hillExport.keys():
+                    item = hillExport[key]
+                    if (item["n"] > 34):
+                        nHills += 1
+                        lon, lat = tileIndexToCoord(tileX, tileY, item["y"], item["x"])
+                        f.write(str(lon) + "," + str(lat) + "," + str(item["h"]) + "," + str(item["n"]) + "\n")
+
+            print("Exported " + str(nHills) + " hills from tile " + str(tileX) + "_" + str(tileY) + ".")
 
 exportHills()

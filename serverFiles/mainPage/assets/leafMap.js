@@ -40,7 +40,7 @@ fetch('http://localhost:3000/api/points')
     .then(response => response.json()).then(data => {
         for (item in data) {
             console.log("Punkt", data[item])
-            L.circleMarker(data[item], {radius: 20, color: '#FF9900'}).addTo(map);
+            L.circle(data[item], {radius: 12.5, color: '#FF9900'}).addTo(map);
         }
     });
 
