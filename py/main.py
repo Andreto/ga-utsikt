@@ -203,7 +203,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     lladd = []  # Stores consecutive points to be added to the latlngs list
     llon = False  # Keeps track of whether the last point was added to the latlngs list
 
-    h0 = tile[pY, pX] if tile[pY, pX] > 1000 else 0  # Elevation of the first point
+    h0 = tile[pY, pX] if tile[pY, pX] > -1000 else 0  # Elevation of the first point
     hBreak = False  # Keeps track of whether the calculation stopped due to max elevation being reached
 
     # Longitude, Latitude of the first point (in degrees)
@@ -315,15 +315,15 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     startTileId = tileId(tLon, tLat)
     queue = {startTileId: []}  # Prepere the queue
 
-    # Add all directions for the starting point to the queue
-    # for i in range(res):
-    #     queue[startTileId].append(
-    #         {
-    #             "p": {"x": startX, "y": startY},
-    #             "di": ((2*math.pi)/res) * i,
-    #             "start": {"v": -4, "lSurf": 0, "radius": 0}
-    #         }
-    #     )
+    #Add all directions for the starting point to the queue
+    for i in range(res):
+        queue[startTileId].append(
+            {
+                "p": {"x": startX, "y": startY},
+                "di": ((2*math.pi)/res) * i,
+                "start": {"v": -4, "lSurf": 0, "radius": 0}
+            }
+        )
     #print("Queue:", queue) # :TEMP:
     #input("Press Enter to continue...") # :TEMP:
 

@@ -9,3 +9,4 @@ demtiles/
 serverParameters/*
 .vscode
 .vs
+serverFiles/mainPage/assets/hillExport.js

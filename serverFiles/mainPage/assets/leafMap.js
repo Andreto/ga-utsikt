@@ -48,6 +48,7 @@ function onMapClick(e) {
     document.getElementById('lon-disp').innerText = chWGS[1].toFixed(6);
     calcChoordsETRS = chETRS;
     console.log(calcChoordsETRS);
+    //print height of clicked point
 }
 
 // loadMapData runs when the calculation-button is pressed
@@ -105,11 +106,11 @@ calcButtonElem.addEventListener('click', function () {
 
 for (const property in hillExport) {
     item = hillExport[property]
-    x = item.x*25 + 4600000
-    y = item.y*25 + 3900000
-    if(item.h > 200){
+    x = item.y*25 + 4600000
+    y = -item.x*25 + 4000000
+    if(item.h > 250){
         console.log("Punkt", )
-        L.circle(proj4('ETRS89', 'WGS84', [x, y]).reverse(), {radius: 120, color: '#FB5258'}).addTo(map);
+        L.circle(proj4('ETRS89', 'WGS84', [x, y]).reverse(), {radius: 12.5, color: '#FF9900'}).addTo(map);
     }
 }
 
