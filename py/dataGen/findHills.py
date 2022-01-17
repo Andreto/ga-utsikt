@@ -1,13 +1,14 @@
 import csv
 import string
 import rasterio
+import time
 from contextlib import redirect_stdout
 import json
 import sys
 sys.path.append('./py')
 from main import *
 
-tileSize = 100
+tileSize = 4000
 
 #Returns highest adjacent point
 def highestAdjacentPoint(tile, x, y):
@@ -39,8 +40,12 @@ def xyId(x, y):
 def exportHills():
 
     #Iterates through tiles
-    for tileY in range(39, 41): #Sweden: 35_52
-        for tileX in range(45, 48): #Sweden: 43_50
+    for tileY in range(35, 52): #Sweden: 35_52
+        for tileX in range(43, 50): #Sweden: 43_50
+
+            start = time.time()
+
+            print("\nCalculating tile " + str(tileX) + "_" + str(tileY) + "...")
 
             tile = rasterio.open("./demtiles" + "/dem_" + str(tileX) + "_" + str(tileY) + ".tif").read()[0]
 
@@ -48,15 +53,16 @@ def exportHills():
             
             #Iterates through points within the tile.
             for y in range(tileSize):
-                if (y % 500 == 0): print(y, "/", tileSize)  #Prints progress
+                if (y % (tileSize / 8) == 0): print(str(100 * (y / tileSize)) + "%")  #Prints progress
                 for x in range(tileSize):
                     
                     p = {"n": 0, "h": tile[x][y], "x": x, "y": y}
 
-                    if (p["h"] < -1000): continue
+                    if (p["h"] < -1000): continue   #Skips potential points without data 
 
                     pNext = highestAdjacentPoint(tile, x, y)
 
+                    #Iterates until a hill is found.
                     while(pNext["h"] > p["h"]):
                         p["h"] = pNext["h"]
                         p["x"] = pNext["x"]
@@ -64,26 +70,28 @@ def exportHills():
 
                         pNext = highestAdjacentPoint(tile, p["x"], p["y"])
 
+                    #Adds another hill, or counts number of points that leads to this hill if it has already been found.
                     if xyId(p["x"], p["y"]) in hillExport:
                         hillExport[xyId(p["x"], p["y"])]["n"] += 1
                     else:
                         p["n"] = 1
                         hillExport[xyId(p["x"], p["y"])] = p
 
-            with open("./hills/hillExport.json", 'w+') as f:
-                with redirect_stdout(f):
-                    print(json.dumps(str(hillExport)))
-
-            nHills = 0
-
-            with open("./hills/hillPoints_" + str(tileX) + "_" + str(tileY) + ".csv", "w+") as f:
+            nHills = 0  #Number of hills found within the tile.
+            
+            #Exports csv.
+            with open("./calcData/hills/hillPoints_" + str(tileX) + "_" + str(tileY) + ".csv", "w+") as f:
                 for key in hillExport.keys():
                     item = hillExport[key]
-                    if (item["n"] > 34):
+
+                    if (item["n"] > 33):    #Removes insignificant hills.
                         nHills += 1
+
                         lon, lat = tileIndexToCoord(tileX, tileY, item["y"], item["x"])
                         f.write(str(lon) + "," + str(lat) + "," + str(item["h"]) + "," + str(item["n"]) + "\n")
+            
+            end = time.time()
 
-            print("Exported " + str(nHills) + " hills from tile " + str(tileX) + "_" + str(tileY) + ".")
+            print("Exported " + str(nHills) + " hills from tile " + str(tileX) + "_" + str(tileY) + "." + "\nTime:", (round(end - start, 2)), "s")  #Prints export info
 
 exportHills()
