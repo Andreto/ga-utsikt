@@ -186,25 +186,47 @@ def nextTileBorder(tilename, x, y, di):
 
     return(coordToTileIndex(*tileIndexToCoord(*tileIndex(tilename), nX, nY)))
 
-def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev): # :TODO:
+def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev, startAngle, startRadius, depth): # :TODO:
     tLonNext, tLatNext, xNext, yNext = nextTileBorder(tilename, x, y, di)
     tilenameNext = tileId(tLonNext, tLatNext)
     lon, lat = tileIndexToCoord(*tileIndex(tilename), x, y)
     lonNext, latNext = tileIndexToCoord(tLonNext, tLatNext, xNext, yNext)
-    log("sqrt", math.sqrt(((lon-lonNext)/25)**2 + ((lat-latNext)/25)**2))
-    lSurf += math.sqrt(((lon-lonNext)/25)**2 + ((lat-latNext)/25)**2)
+    d_lSurf = math.sqrt(((lon-lonNext)/25)**2 + ((lat-latNext)/25)**2)
+    lSurf += d_lSurf
 
     if tilenameNext in demTiles:
-        curveShift = maxCurveRadius - math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius
-        requiredElev = math.sin((lSurf*25)/maxCurveRadius)*math.tan(vMax) + curveShift + hOffset
+        if False: # :TODO: # [4339550, 3914250]
+            l = 0
+            step = 4
+            calcAngle = startAngle
+            while l < d_lSurf:
+                l += step
+                x += round(math.cos(di)*step)
+                y += round(math.sin(di)*step)
+                lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), x, y))
+                pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
+
+                calcAngle += sssAngle(calcAngle, pRadius, step*25)
+                
+            xA = math.sin(calcAngle)*pRadius
+            curveShift = math.sqrt(pRadius**2 - xA**2) - startRadius
+            requiredElev = xA*math.tan(vMax) + curveShift + hOffset
+            angle = calcAngle
+
+        else:
+
+            curveShift = maxCurveRadius - math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius
+            requiredElev = math.sin((lSurf*25)/maxCurveRadius)*math.tan(vMax) + curveShift + hOffset
+            angle = (lSurf*25)/earthRadius
+
         if maxElev[tilenameNext] < requiredElev:
             if maxElev["global"] < requiredElev:
                 return(0, "")
             else:
-                return(checkNextTile(tilenameNext, xNext, yNext, di, vMax, hOffset, lSurf, demTiles, maxElev))
+                return(checkNextTile(tilenameNext, xNext, yNext, di, vMax, hOffset, lSurf, demTiles, maxElev, startAngle, startRadius, depth+1))
         else:
             lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilenameNext), xNext, yNext))
-            return(1, [tilenameNext, {"x": xNext, "y": xNext, "lSurf": lSurf, "radius": radiusCalculation(lat), "angle": (lSurf*25)/earthRadius}])
+            return(1, [tilenameNext, {"x": xNext, "y": xNext, "lSurf": lSurf, "radius": radiusCalculation(lat), "angle": angle}])
     else:
         return(2, "")
 
@@ -320,7 +342,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     tLon, tLat, stX, stY = coordToTileIndex(*tileIndexToCoord(*tileIndex(tilename), round(pX), round(pY)))
     if hBreak:
         lTime = time.time()
-        cnCode, cnObj =  checkNextTile(tilename, pX, pY, di, vMax, (h0 + viewHeight), lSurf, demTiles, maxElev)
+        cnCode, cnObj =  checkNextTile(tilename, pX, pY, di, vMax, (h0 + viewHeight), lSurf, demTiles, maxElev, lastPoint["angle"], startRadius, 0)
         #cnCode = 0 # :TEMP:
         # log("checkTiles time:", time.time()-lTime);
         if cnCode == 0:
