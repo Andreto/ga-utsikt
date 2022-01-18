@@ -139,11 +139,13 @@ def plotlyShow(data):
     xPl = []
     yPl = []
     cPl = []
+    sPl = []
     for i in range(len(data)):
         xPl.append(data[i][0])
         yPl.append(data[i][1])
         cPl.append(data[i][2])
-    fig = px.scatter(x=xPl, y=yPl, color=cPl)
+        sPl.append(data[i][3])
+    fig = px.scatter(x=xPl, y=yPl, color=cPl, symbol=sPl)
     fig.show()
 
 
@@ -187,7 +189,10 @@ def nextTileBorder(tilename, x, y, di):
 def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev): # :TODO:
     tLonNext, tLatNext, xNext, yNext = nextTileBorder(tilename, x, y, di)
     tilenameNext = tileId(tLonNext, tLatNext)
-    lSurf += math.sqrt((xNext-x)**2 + (yNext-y)**2)
+    lon, lat = tileIndexToCoord(*tileIndex(tilename), x, y)
+    lonNext, latNext = tileIndexToCoord(tLonNext, tLatNext, xNext, yNext)
+    log("sqrt", math.sqrt(((lon-lonNext)/25)**2 + ((lat-latNext)/25)**2))
+    lSurf += math.sqrt(((lon-lonNext)/25)**2 + ((lat-latNext)/25)**2)
 
     if tilenameNext in demTiles:
         curveShift = maxCurveRadius - math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius
@@ -212,7 +217,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     vMax = point["start"]["v"]
     lSurf = point["start"]["lSurf"]
 
-    # log("---", tilename, "---", di) # :TEMP: # :HERE:
+    log("---", tilename, "---") # :TEMP: # :HERE:
 
     tileMaxElev = maxElev[tilename]
 
@@ -269,7 +274,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         v = math.atan(x and y / x or 0)
         
         global exportData
-        exportData.append([x, curveShift, ("a" if v > vMax else "b")]) # :TEMP:
+        exportData.append([x, curveShift, ("a" if v > vMax else "b"), di]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -325,7 +330,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
             queueObj["p"] = {"x": cnObj[1]["x"], "y": cnObj[1]["y"]}
             queueObj["start"]["lSurf"] = cnObj[1]["lSurf"]
             queueObj["last"] = {"radius": cnObj[1]["radius"], "angle": cnObj[1]["angle"]}
-            log(math.sin(cnObj[1]["angle"]*earthRadius), queueObj)
+            log(math.sin(cnObj[1]["angle"])*earthRadius, queueObj)
             return(latlngs, 1, [cnObj[0], queueObj])
         elif cnCode == 2:
             return(latlngs, 2, ["warn", "Some of the view is not visible due to the lack of DEM data"])
