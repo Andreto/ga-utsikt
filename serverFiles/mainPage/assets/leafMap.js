@@ -33,9 +33,15 @@ var tileBound;
 fetch('http://localhost:3000/api/grid')
     .then(response => response.json()).then(data => {
         tileBound = L.polyline(
-            data,
+            data.p,
             { color: '#6977BF', weight: 2 })
             .addTo(map);
+        for (i in data.l) {
+            label = data.l[i];
+            var marker = new L.marker(label.ch, { opacity: 0 }); //opacity may be set to zero
+            marker.bindTooltip(label.txt, {permanent: true, className: "grid-label", offset: [0, 0] });
+            marker.addTo(map);
+        }
     });
 
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
@@ -89,6 +95,10 @@ function onResize(e) {
     var lfTxt = leafScale.innerText.split(' ');
     scaleInd.style.width = (String(parseInt(leafScale.style.width.replace('px', ''))*4)+'px');
     scaleInd.innerText = String(parseInt(lfTxt[0])*4) + ' ' + lfTxt[1];
+}
+
+function showGridLabels() {
+    document.body.classList.toggle('show-grid-labels');
 }
 
 var scaleElem = document.createElement('div');
