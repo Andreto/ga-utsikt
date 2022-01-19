@@ -381,7 +381,9 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     startTileId = tileId(tLon, tLat)
     queue = {startTileId: []}  # Prepere the queue
 
+
     # Add all directions for the starting point to the queue
+
     for i in range(res):
         queue[startTileId].append(
             {

@@ -9,3 +9,6 @@ demtiles/
 serverParameters/*
 .vscode
 .vs
+serverFiles/mainPage/assets/hillExport.js
+calcData/hills
+calcData/calcPoints
