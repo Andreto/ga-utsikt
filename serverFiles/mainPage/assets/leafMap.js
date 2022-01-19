@@ -2,6 +2,8 @@ var mapElem = document.getElementById('map');
 var mapLogElem = document.getElementById('map-log');
 var mapLoaderElem = document.getElementById('map-loader');
 var calcButtonElem = document.getElementById('calc-button');
+var locatorButton = document.getElementById('locator-button');
+var locatorSvg = locatorButton.getElementsByClassName('locator-svg')[0];
 
 proj4.defs([
     ['WGS84', '+proj=longlat +datum=WGS84 +no_defs'],
@@ -31,9 +33,15 @@ var tileBound;
 fetch('http://localhost:3000/api/grid')
     .then(response => response.json()).then(data => {
         tileBound = L.polyline(
-            data,
+            data.p,
             { color: '#6977BF', weight: 2 })
             .addTo(map);
+        for (i in data.l) {
+            label = data.l[i];
+            var marker = new L.marker(label.ch, { opacity: 0 }); //opacity may be set to zero
+            marker.bindTooltip(label.txt, {permanent: true, className: "grid-label", offset: [0, 0] });
+            marker.addTo(map);
+        }
     });
 
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
@@ -81,14 +89,44 @@ function loadMapData(latlng) {
         });
 }
 
+function onResize(e) {
+    var leafScale = document.getElementsByClassName('leaflet-control-scale-line')[0];
+    var scaleInd = document.getElementById('scale-ind');
+    var lfTxt = leafScale.innerText.split(' ');
+    scaleInd.style.width = (String(parseInt(leafScale.style.width.replace('px', ''))*4)+'px');
+    scaleInd.innerText = String(parseInt(lfTxt[0])*4) + ' ' + lfTxt[1];
+}
+
+function showGridLabels() {
+    document.body.classList.toggle('show-grid-labels');
+}
+
+var scaleElem = document.createElement('div');
+scaleElem.classList.add('scale-indicator');
+scaleElem.innerHTML = '<div class="scale-indicator-text" id="scale-ind">100 m</div>';
+document.getElementsByClassName('leaflet-control-container')[0].appendChild(scaleElem);
+
 // Define event-listeners
 map.on('click', onMapClick);
+map.on('zoomend', onResize);
+L.control.scale().addTo(map);
 
 L.control.scale().addTo(map);
 
 calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())
 });
+locatorButton.addEventListener('click', function () {
+    locatorSvg.classList.add('spinAnim');
+    map.locate({setView: true, maxZoom: 16});
+});
+locatorSvg.addEventListener('animationend', function () {
+    locatorSvg.classList.remove('spinAnim');
+});
+
+
+
+map.locate({setView: true, maxZoom: 16});
 
 
 //d0vis = L.polyline(testData0['pl'], {color: '#AACB41', weight: 4}).addTo(map);

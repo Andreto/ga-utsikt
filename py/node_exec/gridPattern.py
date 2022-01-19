@@ -3,11 +3,15 @@ import json
 sys.path.append('./py')
 from main import *
 
-out = []
+p = []
+l = []
 
 demInfo = json.load(open("./serverParameters/demfiles.json", "r"))
 
 for tile in demInfo["tiles"]:
-    tile = list(map(int, tile.split("_")))
-    out.append(getTileArea(*tile))
-print(out)
+    tileCh = list(map(int, tile.split("_")))
+    borders = getTileArea(*tileCh)
+    p.append(borders)
+    l.append({"txt": tile, "ch": [(borders[2][0] + borders[0][0])/2, (borders[2][1] + borders[0][1])/2]})
+
+print(json.dumps({"p": p, "l": l}))

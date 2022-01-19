@@ -92,10 +92,75 @@ body {
     margin-top: 4px;
 }
 
+.scale-indicator {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    background-color: rgba(255, 255, 255, .5);
+    padding: 4px 10px;
+    z-index: 1000;
+    border-radius: 2px;
+    backdrop-filter: saturate(90%) blur(20px);
+    border-left: 2px solid #000000aa;
+    border-right: 2px solid #000000aa;
+}
+
+#locator-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    padding: 4px 4px 0px 4px;
+    background: #fff;
+    border-radius: 4px;
+    z-index: 1001;
+    cursor: pointer;
+    border: 2px solid rgba(0,0,0,0.2)
+}
+#locator-button:hover {
+    background: #F4F4F4;
+}
 
 textarea:focus, input:focus{
     outline: none;
 }
+
+.spinAnim {
+    animation: spin .5s ease-in-out;
+}
+
+.grid-label {
+    display: none;
+    background: #ffffffaa;
+    border: none;
+    box-shadow: none;
+    padding: 2px;
+}
+.grid-label:before {
+    display: none;
+}
+body.show-grid-labels .grid-label {
+    display: block;
+}
+
+
+/* Custom leaflet css */
+.leaflet-control-scale-line {
+    display: none;
+}
+.leaflet-container .leaflet-control-attribution {
+    padding: 5px 10px;
+    backdrop-filter: saturate(90%) blur(20px);
+    border-radius: 2px;
+}
+.leaflet-bottom {
+    bottom: 10px;
+}
+.leaflet-right {
+    right: 10px;
+}
+
+
+/* MEDIA QUERIES */
 
 @media only screen and (max-width: 400px) {
     #calc-button {

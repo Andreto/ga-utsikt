@@ -11,6 +11,7 @@ with open('temp/py_log.txt', 'w+') as f:
     with redirect_stdout(f):
         print()
         print(float(sys.argv[3]))
+        print("---------------------")
 
         
 
