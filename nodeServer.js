@@ -36,7 +36,7 @@ app.get('/api/p', (req, res) => {
     spawnPythonProc(req, res, 
         ['./py/node_exec/getViewPolygons.py', req.query.lon, req.query.lat, req.query.res,  req.query.oh],
         function(req, res, data, code) {
-            console.log(`child process closed all stdio with code ${code}`);
+            console.log(`getViewPolygons.py closed with ${code}`);
             res.send(data);
             res.end();
         }
@@ -47,7 +47,7 @@ app.get('/api/grid', (req, res) => {
     spawnPythonProc(req, res, 
         ['./py/node_exec/gridPattern.py'],
         function(req, res, data, code) {
-            console.log(`child process closed all stdio with code ${code}`);
+            console.log(`gridPattern.py closed with ${code}`);
             res.send(data);
             res.end();
         }
@@ -58,7 +58,18 @@ app.get('/api/points', (req, res) => {
     spawnPythonProc(req, res, 
         ['./py/node_exec/showCsvPoints.py'],
         function(req, res, data, code) {
-            console.log(`child process closed all stdio with code ${code}`);
+            console.log(`showCsvPoints.py closed with ${code}`);
+            res.send(data);
+            res.end();
+        }
+    )
+});
+
+app.get('/api/elev', (req, res) => {
+    spawnPythonProc(req, res, 
+        ['./py/node_exec/getPointElev.py', req.query.lon, req.query.lat],
+        function(req, res, data, code) {
+            console.log(`getPointElev.py closed with ${code}`);
             res.send(data);
             res.end();
         }

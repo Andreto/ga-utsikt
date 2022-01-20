@@ -226,7 +226,7 @@ def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev, s
                 return(checkNextTile(tilenameNext, xNext, yNext, di, vMax, hOffset, lSurf, demTiles, maxElev, startAngle, startRadius, depth+1))
         else:
             lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilenameNext), xNext, yNext))
-            return(1, [tilenameNext, {"x": xNext, "y": xNext, "lSurf": lSurf, "radius": radiusCalculation(lat), "angle": angle}])
+            return(1, [tilenameNext, {"x": xNext, "y": yNext, "lSurf": lSurf, "radius": radiusCalculation(lat), "angle": angle}])
     else:
         return(2, "")
 
@@ -399,7 +399,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     # queue[startTileId].append( # :TEMP:
     #     {
     #         "p": {"x": startX, "y": startY},
-    #         "di": (((11/8)*math.pi)),
+    #         "di": ((1.413716694115407)),
     #         "start": {"v": -4, "lSurf": 0, "radius": 0},
     #         "last": 0
     #     }

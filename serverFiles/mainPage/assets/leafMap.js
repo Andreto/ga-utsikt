@@ -5,6 +5,7 @@ var calcButtonElem = document.getElementById('calc-button');
 var locatorButton = document.getElementById('locator-button');
 var locatorSvg = locatorButton.getElementsByClassName('locator-svg')[0];
 
+
 proj4.defs([
     ['WGS84', '+proj=longlat +datum=WGS84 +no_defs'],
     ['ETRS89', '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs']
@@ -64,6 +65,7 @@ function onMapClick(e) {
     document.getElementById('lon-disp').innerText = chWGS[1].toFixed(6);
     calcChoordsETRS = chETRS;
     console.log(calcChoordsETRS);
+    updateMapElev(calcChoordsETRS[0], calcChoordsETRS[1]);
     //print height of clicked point
 }
 
@@ -108,6 +110,16 @@ function onResize(e) {
 
 function showGridLabels() {
     document.body.classList.toggle('show-grid-labels');
+}
+
+function updateMapElev(lon, lat) {
+    document.getElementById('elevetion-display').innerText = "-";
+    console.log('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat);
+    fetch('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat)
+    .then(response => response.json()).then(data => {
+        console.log(parseInt(data.elev));
+        document.getElementById('elevetion-display').innerText = parseInt(data.elev);
+    });
 }
 
 var scaleElem = document.createElement('div');
