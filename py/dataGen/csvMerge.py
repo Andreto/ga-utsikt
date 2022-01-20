@@ -3,11 +3,13 @@ import pandas
 #Merges tiles into one csv file
 with open("./calcData/calcPoints/calcPoints.csv", "w+") as merge:
 
+    n = 0
+
     merge.write("x,y,h,n\n")    #Adds headers allowing sorting of data
 
     #Iterates through tiles
-    for tileY in range(39, 41): #Sweden: 35_52
-        for tileX in range(45, 48): #Sweden: 43_50
+    for tileY in range(35, 52): #Sweden: 35_52
+        for tileX in range(43, 50): #Sweden: 43_50
 
             tileID = str(tileX) + "_" + str(tileY)
 
@@ -39,12 +41,18 @@ with open("./calcData/calcPoints/calcPoints.csv", "w+") as merge:
             with open("./calcData/hills/hillPoints_" + str(tileX) + "_" + str(tileY) + ".csv", "r") as tile:
                 merge.write(tile.read())
 
+                n += 1
+
+                print("Merged " + str(n) + " files")
+
 #Sorts merged file by h-vale
+print("Sorting by h...")
 csvData = pandas.read_csv("./calcData/calcPoints/calcPoints.csv")
 csvData.sort_values(["h"], axis=0, ascending=[False], inplace=True)
 csvData.to_csv("./calcData/calcPoints/calcPoints_h.csv", mode="w+", index=False, header=False)
 
 #Sorts merged file by n-value
+print("Sorting by n...")
 csvData = pandas.read_csv("./calcData/calcPoints/calcPoints.csv")
 csvData.sort_values(["n"], axis=0, ascending=[False], inplace=True)
 csvData.to_csv("./calcData/calcPoints/calcPoints_n.csv", mode="w+", index=False, header=False)

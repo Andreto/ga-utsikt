@@ -11,7 +11,7 @@ with open("./temp/hillPoints.csv", "r") as f: #read csv file
         chords = [*euTOwm.transform(float(line[0]), float(line[1]))]
         chords.reverse()
         
-        if (float(line[3]) > 3000):
-            out.append(chords)
+      
+        out.append(chords)
 
 print(out)
