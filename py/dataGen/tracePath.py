@@ -61,7 +61,7 @@ def exportPath(lon, lat):
     
     #Exports path.
     with open("./temp/hillpoints.csv", "w+") as f:
-        for key in range(len(path)):
+        for key in range(0, len(path), 3):
             item = path[key]
 
             lon, lat = tileIndexToCoord(tileX, tileY, item[0], item[1])
@@ -69,4 +69,4 @@ def exportPath(lon, lat):
 
     print("Exported a path with a length of " + str(len(path)) + " points")  #Prints export info
 
-exportPath(17.445830, 67.630971)
+exportPath(17.367008, 67.643823)
