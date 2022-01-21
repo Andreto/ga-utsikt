@@ -113,12 +113,12 @@ function showGridLabels() {
 }
 
 function updateMapElev(lon, lat) {
-    document.getElementById('elevetion-display').innerText = "-";
+    document.getElementById('elevetion-display').innerText = "...";
     console.log('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat);
     fetch('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat)
     .then(response => response.json()).then(data => {
-        console.log(parseInt(data.elev));
-        document.getElementById('elevetion-display').innerText = parseInt(data.elev);
+        console.log(data.elev);
+        document.getElementById('elevetion-display').innerText = parseFloat(data.elev);
     });
 }
 
