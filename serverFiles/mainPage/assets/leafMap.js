@@ -45,13 +45,13 @@ fetch('http://localhost:3000/api/grid')
         }
     });
 
-fetch('http://localhost:3000/api/points')
-    .then(response => response.json()).then(data => {
-        for (item in data) {
-            console.log("Punkt", data[item])
-            L.circle(data[item], {radius: 12.5, color: '#FF9900'}).addTo(map);
-        }
-    });
+// fetch('http://localhost:3000/api/points')
+//     .then(response => response.json()).then(data => {
+//         for (item in data) {
+//             console.log("Punkt", data[item])
+//             L.circle(data[item], {radius: 12.5, color: '#FF9900'}).addTo(map);
+//         }
+//     });
 
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
 
@@ -68,6 +68,8 @@ function onMapClick(e) {
     updateMapElev(calcChoordsETRS[0], calcChoordsETRS[1]);
     //print height of clicked point
 }
+
+
 
 // loadMapData runs when the calculation-button is pressed
 function loadMapData(latlng) {
@@ -124,7 +126,10 @@ function updateMapElev(lon, lat) {
 
 function setCalcPoint(lon, lat) {
     var chWGS = proj4('WGS84', 'ETRS89', [lon, lat]);
-    
+    calcLocation.setLatLng(chWGS.reverse());
+    document.getElementById('lat-disp').innerText = chWGS[0].toFixed(6);
+    document.getElementById('lon-disp').innerText = chWGS[1].toFixed(6);
+    updateMapElev(calcChoordsETRS[0], calcChoordsETRS[1]);
 }
 
 var scaleElem = document.createElement('div');

@@ -296,7 +296,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         v = math.atan(x and y / x or 0)
         
         global exportData
-        exportData.append([x, curveShift, math.cos(calcAngle)*h]) # :TEMP:
+        exportData.append([x, curveShift+300, math.cos(calcAngle)*h, lSurf, v > vMax]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
