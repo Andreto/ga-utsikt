@@ -122,6 +122,11 @@ function updateMapElev(lon, lat) {
     });
 }
 
+function setCalcPoint(lon, lat) {
+    var chWGS = proj4('WGS84', 'ETRS89', [lon, lat]);
+    
+}
+
 var scaleElem = document.createElement('div');
 scaleElem.classList.add('scale-indicator');
 scaleElem.innerHTML = '<div class="scale-indicator-text" id="scale-ind">100 m</div>';
