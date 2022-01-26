@@ -293,10 +293,10 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         }
 
         # Detect visibility
-        v = math.atan(x and y / x or 0)
+        v = math.atan(y / x) if x else -math.pi/2
         
         global exportData
-        exportData.append([x, curveShift+300, math.cos(calcAngle)*h, lSurf, v > vMax]) # :TEMP:
+        exportData.append([x, curveShift+300, math.cos(calcAngle)*h, lSurf, v, x]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -318,7 +318,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
-        if requiredElev > tileMaxElev:
+        if requiredElev > tileMaxElev and x > 0:
             hBreak = True
             break
 
@@ -381,26 +381,26 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
 
     # Add all directions for the starting point to the queue
 
-    # for i in range(res):
-    #     queue[startTileId].append(
-    #         {
-    #             "p": {"x": startX, "y": startY},
-    #             "di": ((2*math.pi)/res) * i,
-    #             "start": {"v": -4, "lSurf": 0, "radius": 0},
-    #             "last": 0
-    #         }
-    #     )
+    for i in range(res):
+        queue[startTileId].append(
+            {
+                "p": {"x": startX, "y": startY},
+                "di": ((2*math.pi)/res) * i,
+                "start": {"v": -4, "lSurf": 0, "radius": 0},
+                "last": 0
+            }
+        )
     #print("Queue:", queue) # :TEMP:
     #input("Press Enter to continue...") # :TEMP:
 
-    queue[startTileId].append( # :TEMP:
-        {
-            "p": {"x": startX, "y": startY},
-            "di": (5/4)*math.pi,
-            "start": {"v": -4, "lSurf": 0, "radius": 0},
-            "last": 0
-        }
-    )
+    # queue[startTileId].append( # :TEMP:
+    #     {
+    #         "p": {"x": startX, "y": startY},
+    #         "di": (5/4)*math.pi,
+    #         "start": {"v": -4, "lSurf": 0, "radius": 0},
+    #         "last": 0
+    #     }
+    # )
 
     
     while (len(queue) > 0):

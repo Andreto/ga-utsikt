@@ -30,20 +30,20 @@ var calcLocation = L.marker([59.33, 18.07], {
     color: '#FB5258',
 }).addTo(map);
 
-var tileBound;
-fetch('http://localhost:3000/api/grid')
-    .then(response => response.json()).then(data => {
-        tileBound = L.polyline(
-            data.p,
-            { color: '#6977BF', weight: 2 })
-            .addTo(map);
-        for (i in data.l) {
-            label = data.l[i];
-            var marker = new L.marker(label.ch, { opacity: 0 }); //opacity may be set to zero
-            marker.bindTooltip(label.txt, {permanent: true, className: "grid-label", offset: [0, 0] });
-            marker.addTo(map);
-        }
-    });
+// var tileBound;
+// fetch('http://localhost:3000/api/grid')
+//     .then(response => response.json()).then(data => {
+//         tileBound = L.polyline(
+//             data.p,
+//             { color: '#6977BF', weight: 2 })
+//             .addTo(map);
+//         for (i in data.l) {
+//             label = data.l[i];
+//             var marker = new L.marker(label.ch, { opacity: 0 }); //opacity may be set to zero
+//             marker.bindTooltip(label.txt, {permanent: true, className: "grid-label", offset: [0, 0] });
+//             marker.addTo(map);
+//         }
+//     });
 
 // fetch('http://localhost:3000/api/points')
 //     .then(response => response.json()).then(data => {
@@ -125,7 +125,8 @@ function updateMapElev(lon, lat) {
 }
 
 function setCalcPoint(lon, lat) {
-    var chWGS = proj4('WGS84', 'ETRS89', [lon, lat]);
+    calcChoordsETRS = [lon, lat];
+    var chWGS = proj4('ETRS89', 'WGS84', [lon, lat]);
     calcLocation.setLatLng(chWGS.reverse());
     document.getElementById('lat-disp').innerText = chWGS[0].toFixed(6);
     document.getElementById('lon-disp').innerText = chWGS[1].toFixed(6);

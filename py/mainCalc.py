@@ -7,7 +7,7 @@ from posixpath import lexists
 from tkinter import XView
 
 import numpy as np
-import plotly.express as px
+# import plotly.express as px
 import pyproj as proj
 import rasterio
 from numpy.lib.function_base import i0
@@ -136,18 +136,18 @@ def exportPointsToCSV(data):
             f.write("\n")
 
 
-def plotlyShow(data):
-    xPl = []
-    yPl = []
-    cPl = []
-    sPl = []
-    for i in range(len(data)):
-        xPl.append(data[i][0])
-        yPl.append(data[i][1])
-        cPl.append(data[i][2])
-        sPl.append(data[i][3])
-    fig = px.scatter(x=xPl, y=yPl, color=cPl, symbol=sPl)
-    fig.show()
+# def plotlyShow(data):
+#     xPl = []
+#     yPl = []
+#     cPl = []
+#     sPl = []
+#     for i in range(len(data)):
+#         xPl.append(data[i][0])
+#         yPl.append(data[i][1])
+#         cPl.append(data[i][2])
+#         sPl.append(data[i][3])
+#     fig = px.scatter(x=xPl, y=yPl, color=cPl, symbol=sPl)
+#     fig.show()
 
 
 def inBounds(x, y, top, left, bottom, right):
@@ -294,10 +294,10 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev, N, longes
         }
 
         # Detect visibility
-        v = math.atan(x and y / x or 0)
+        v = math.atan(y / x) if x else -math.pi/2
 
-        global exportData
-        exportData.append([x, lSurf, ("a" if v > vMax else "b"), di]) # :TEMP:
+        #global exportData # :TEMP:
+        #exportData.append([x, lSurf, ("a" if v > vMax else "b"), di]) # :TEMP:
 
         if v > vMax and x > 0:
             vMax = v
@@ -308,7 +308,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev, N, longes
 
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
-        if requiredElev > tileMaxElev:
+        if requiredElev > tileMaxElev and x > 0:
             hBreak = True
             break
 
@@ -328,7 +328,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev, N, longes
     
     tLon, tLat, stX, stY = coordToTileIndex(*tileIndexToCoord(*tileIndex(tilename), round(pX), round(pY)))
     if hBreak:
-        lTime = time.time()
+        # lTime = time.time()
         cnCode, cnObj =  checkNextTile(tilename, pX, pY, di, vMax, (h0 + viewHeight), lSurf, demTiles, maxElev, lastPoint["angle"], startRadius, 0)
         #cnCode = 0 # :TEMP:
         # log("checkTiles time:", time.time()-lTime);
@@ -429,14 +429,21 @@ def start():
     Lines = f.readlines()
     lCount = 0
     linesLen = len(Lines)
+    longestLongest = 0
+    startTime = time.time()
     for line in Lines:
+        lTime = time.time()
         print("Line", line)
         point = list(map(int, line.split(',')[0:2]))
         print("Calculating:", point[0], point[1], ("("+ str(lCount) + "/" + str(linesLen) + ")"))
         pointN, pointLongest = calcViewPolys(point[0], point[1], 90, 2)
+        exTime = time.time() - lTime
         with open("./temp/generated.csv", "a+") as saveFile:
-            print("Saving:", point[0], point[1], "; N:", pointN, "; N:", pointLongest["l"])
-            saveFile.write(str(point[0]) + "," + str(point[1]) + "," + str(pointN) + "," + str(pointLongest["l"]) + "\n")
+            print("Saving:", point[0], point[1], "; N:", pointN, "; N:", pointLongest["l"], ";", exTime)
+            saveFile.write(str(point[0]) + "," + str(point[1]) + "," + str(pointN) + "," + str(pointLongest["l"]) + str(pointLongest["di"]) + + "\n")
+        if pointLongest["l"] > longestLongest:
+            longestLongest = pointLongest["l"]
+        print("\nTotals:" + " T:" + str(time.time() - startTime) + " Longest:", str(longestLongest))
         lCount += 1
 
 start()
