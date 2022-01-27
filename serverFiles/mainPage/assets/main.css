@@ -105,10 +105,7 @@ body {
     border-right: 2px solid #000000aa;
 }
 
-#locator-button {
-    position: absolute;
-    right: 10px;
-    top: 10px;
+.map-action-button {
     padding: 4px 4px 0px 4px;
     background: #fff;
     border-radius: 4px;
@@ -116,9 +113,22 @@ body {
     cursor: pointer;
     border: 2px solid rgba(0,0,0,0.2)
 }
-#locator-button:hover {
+.map-action-button:hover {
     background: #F4F4F4;
 }
+
+#locator-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+#satelite-button {
+    position: absolute;
+    right: 10px;
+    top: 54px;
+}
+
 .glass-ui {
     background-color: rgba(255, 255, 255, .5);
     backdrop-filter: saturate(90%) blur(20px);
@@ -140,6 +150,9 @@ textarea:focus, input:focus{
 
 .spinAnim {
     animation: spin .5s ease-in-out;
+}
+.flipCardAnim {
+    animation: flipCard .5s ease-in-out;
 }
 
 .grid-label {
@@ -185,4 +198,9 @@ body.show-grid-labels .grid-label {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@keyframes flipCard {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
 }

@@ -3,8 +3,12 @@ var mapLogElem = document.getElementById('map-log');
 var mapLoaderElem = document.getElementById('map-loader');
 var calcButtonElem = document.getElementById('calc-button');
 var locatorButton = document.getElementById('locator-button');
-var locatorSvg = locatorButton.getElementsByClassName('locator-svg')[0];
+var locatorSvg = document.getElementById('locator-svg');
+var sateliteButton = document.getElementById('satelite-button');
+var sateliteSvg = document.getElementById('satelite-svg');
 
+var sateliteMapOn = false;
+var blockMapClick = false;
 
 proj4.defs([
     ['WGS84', '+proj=longlat +datum=WGS84 +no_defs'],
@@ -15,14 +19,21 @@ var calcChoordsETRS = proj4('WGS84', 'ETRS89', [18.07, 59.33]);
 
 // Configure map element
 var map = L.map('map').setView([59.33, 18.07], 6);
-L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+mapboxMap = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
     id: 'mapbox/outdoors-v11',
     tileSize: 512,
     zoomOffset: -1,
     accessToken: 'pk.eyJ1IjoiYW5kcmV0byIsImEiOiJja24zZGxndzUwN3hlMnhvMDhjenlhbHFyIn0.qJGRxlYtndUtH-QNQa8LZA'
-}).addTo(map);
+})
+
+mapboxMap.addTo(map);
+
+googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
+    maxZoom: 20,
+    subdomains:['mt0','mt1','mt2','mt3']
+});
 
 // Create map-marker and tile bounding-box
 
@@ -57,16 +68,18 @@ var pl, hz; // Map-items that displays view-poly-lines and horizon-line
 
 // When a point on the map is clicked, this point is set as the calculation base-point
 function onMapClick(e) {
-    var chETRS = proj4('WGS84', 'ETRS89', [e.latlng.lng, e.latlng.lat]);
-    chETRS = [Math.round(chETRS[0] / 25) * 25, Math.round(chETRS[1] / 25) * 25];
-    chWGS = proj4('ETRS89', 'WGS84', chETRS);
-    calcLocation.setLatLng(chWGS.reverse());
-    document.getElementById('lat-disp').innerText = chWGS[0].toFixed(6);
-    document.getElementById('lon-disp').innerText = chWGS[1].toFixed(6);
-    calcChoordsETRS = chETRS;
-    console.log(calcChoordsETRS);
-    updateMapElev(calcChoordsETRS[0], calcChoordsETRS[1]);
-    //print height of clicked point
+    if (!blockMapClick) {
+        var chETRS = proj4('WGS84', 'ETRS89', [e.latlng.lng, e.latlng.lat]);
+        chETRS = [Math.round(chETRS[0] / 25) * 25, Math.round(chETRS[1] / 25) * 25];
+        chWGS = proj4('ETRS89', 'WGS84', chETRS);
+        calcLocation.setLatLng(chWGS.reverse());
+        document.getElementById('lat-disp').innerText = chWGS[0].toFixed(6);
+        document.getElementById('lon-disp').innerText = chWGS[1].toFixed(6);
+        calcChoordsETRS = chETRS;
+        console.log(calcChoordsETRS);
+        updateMapElev(calcChoordsETRS[0], calcChoordsETRS[1]);
+        //print height of clicked point
+    }
 }
 
 // loadMapData runs when the calculation-button is pressed
@@ -144,8 +157,33 @@ locatorButton.addEventListener('click', function () {
 locatorSvg.addEventListener('animationend', function () {
     locatorSvg.classList.remove('spinAnim');
 });
+locatorSvg.addEventListener('mouseover', function () {
+    blockMapClick = true;
+});
+locatorSvg.addEventListener('mouseout', function () {
+    blockMapClick = false;
+});
 
 
+sateliteButton.addEventListener('click', function () {
+    if (sateliteMapOn) {
+        googleSat.remove(map);
+        sateliteMapOn = false;
+    } else {
+        googleSat.addTo(map);
+        sateliteMapOn = true;
+    }
+    sateliteSvg.classList.add('flipCardAnim');
+});
+sateliteSvg.addEventListener('animationend', function () {
+    sateliteSvg.classList.remove('flipCardAnim');
+});
+sateliteSvg.addEventListener('mouseover', function () {
+    blockMapClick = true;
+});
+sateliteSvg.addEventListener('mouseout', function () {
+    blockMapClick = false;
+});
 
 map.locate({setView: true, maxZoom: 16});
 
