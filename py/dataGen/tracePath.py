@@ -6,7 +6,7 @@ from contextlib import redirect_stdout
 import json
 import sys
 sys.path.append('./py')
-from main import *
+from main import wmTOeu, coordToTileIndex, tileIndexToCoord
 
 #Returns highest adjacent point
 def highestAdjacentPoint(tile, x, y):

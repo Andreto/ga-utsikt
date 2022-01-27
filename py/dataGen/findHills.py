@@ -6,7 +6,7 @@ from contextlib import redirect_stdout
 import json
 import sys
 sys.path.append('./py')
-from main import *
+from main import tileIndexToCoord
 
 tileSize = 4000
 
