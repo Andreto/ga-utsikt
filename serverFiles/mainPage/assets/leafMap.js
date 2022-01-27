@@ -56,13 +56,13 @@ fetch('http://localhost:3000/api/grid')
         }
     });
 
-fetch('http://localhost:3000/api/points')
-    .then(response => response.json()).then(data => {
-        for (item in data) {
-            console.log("Punkt", data[item])
-            L.circle(data[item], {radius: 12.5, color: '#FF9900'}).addTo(map);
-        }
-    });
+// fetch('http://localhost:3000/api/points')
+//     .then(response => response.json()).then(data => {
+//         for (item in data) {
+//             console.log("Punkt", data[item])
+//             L.circle(data[item], {radius: 12.5, color: '#FF9900'}).addTo(map);
+//         }
+//     });
 
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
 
@@ -145,8 +145,7 @@ map.on('click', onMapClick);
 map.on('zoomend', onResize);
 L.control.scale().addTo(map);
 
-L.control.scale().addTo(map);
-
+// Map Action-buttons
 calcButtonElem.addEventListener('click', function () {
     loadMapData(calcLocation.getLatLng())
 });
@@ -163,7 +162,6 @@ locatorSvg.addEventListener('mouseover', function () {
 locatorSvg.addEventListener('mouseout', function () {
     blockMapClick = false;
 });
-
 
 sateliteButton.addEventListener('click', function () {
     if (sateliteMapOn) {
