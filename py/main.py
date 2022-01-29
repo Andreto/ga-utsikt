@@ -293,7 +293,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         }
 
         # Detect visibility
-        v = math.atan(x and y / x or 0)
+        v = math.atan(y / x) if x else -math.pi/2
         
         global exportData
         exportData.append([x, curveShift, ("a" if v > vMax else "b"), di]) # :TEMP:
@@ -318,7 +318,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
 
         # Elevation required to see a point with the current angle
         requiredElev = (math.tan(vMax)*x) - curveShift + h0 + viewHeight
-        if requiredElev > tileMaxElev:
+        if requiredElev > tileMaxElev and x > 0:
             hBreak = True
             break
 
