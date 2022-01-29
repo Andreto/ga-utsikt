@@ -161,6 +161,13 @@ textarea:focus, input:focus{
     border: none;
     box-shadow: none;
     padding: 2px;
+    margin-top: 20px;
+}
+.leaflet-tooltip-right {
+    margin-left: -30px;
+}
+.leaflet-tooltip-left {
+    margin-left: 30px;
 }
 .grid-label:before {
     display: none;
