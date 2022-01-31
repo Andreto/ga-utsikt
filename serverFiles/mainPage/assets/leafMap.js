@@ -37,7 +37,10 @@ googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
 
 // Create map-marker and tile bounding-box
 
-var calcLocation = L.marker([59.33, 18.07], {
+chETRS = [4650075, 5071875]
+chWGS = proj4('ETRS89', 'WGS84', chETRS);
+chWGS.reverse();
+var calcLocation = L.marker(chWGS, {
     color: '#FB5258',
 }).addTo(map);
 
