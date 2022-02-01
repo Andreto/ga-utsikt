@@ -5,7 +5,7 @@ from main import *
 
 out = []
 
-with open("./temp/hillPoints.csv", "r") as f: #read csv file
+with open("./temp/sightlinePath.csv", "r") as f: #read csv file
     for line in f: 
         line = line.split(",")
         chords = [*euTOwm.transform(float(line[0]), float(line[1]))]

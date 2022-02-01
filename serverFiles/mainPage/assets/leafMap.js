@@ -44,28 +44,38 @@ var calcLocation = L.marker(chWGS, {
     color: '#FB5258',
 }).addTo(map);
 
-var tileBound;
-fetch('http://localhost:3000/api/grid')
+// var tileBound;
+// fetch('http://localhost:3000/api/grid')
+//     .then(response => response.json()).then(data => {
+//         tileBound = L.polyline(
+//             data.p,
+//             { color: '#6977BF', weight: 2 })
+//             .addTo(map);
+//         for (i in data.l) {
+//             label = data.l[i];
+//             var marker = new L.marker(label.ch, { opacity: 0 }); //opacity may be set to zero
+//             marker.bindTooltip(label.txt, {permanent: true, className: "grid-label", offset: [0, 0] });
+//             marker.addTo(map);
+//         }
+//     });
+
+//Display points
+fetch('http://localhost:3000/api/points')
     .then(response => response.json()).then(data => {
-        tileBound = L.polyline(
-            data.p,
-            { color: '#6977BF', weight: 2 })
-            .addTo(map);
-        for (i in data.l) {
-            label = data.l[i];
-            var marker = new L.marker(label.ch, { opacity: 0 }); //opacity may be set to zero
-            marker.bindTooltip(label.txt, {permanent: true, className: "grid-label", offset: [0, 0] });
-            marker.addTo(map);
+        for (item in data) {
+            console.log("Punkt", data[item])
+            L.circle(data[item], {color: '#F24B6A', radius: 12.5, }).addTo(map);
         }
     });
 
+// //Display lines
 // fetch('http://localhost:3000/api/points')
-//     .then(response => response.json()).then(data => {
-//         for (item in data) {
-//             console.log("Punkt", data[item])
-//             L.circle(data[item], {radius: 12.5, color: '#FF9900'}).addTo(map);
-//         }
-//     });
+// .then(response => response.json()).then(data => {
+//     for (item in data) {
+//         console.log("Linje", data[item])
+//         L.polyline(data, {color: '#FF9900', weight: 2, }).addTo(map);
+//     }
+// });
 
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
 
