@@ -425,7 +425,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
 
 def start():
     # f = open('./calcData/calcPoints/calcPoints_h.csv', 'r')
-    f = open('./calcData/hills/hillPoints_46_39.csv', 'r')
+    f = open('./calcData/calcPoints/randomPoints.csv', 'r')
     Lines = f.readlines()
     lCount = 0
     linesLen = len(Lines)
@@ -435,12 +435,13 @@ def start():
         lTime = time.time()
         print("Line", line)
         point = list(map(int, line.split(',')[0:2]))
-        print("Calculating:", point[0], point[1], ("("+ str(lCount) + "/" + str(linesLen) + ")"))
+        H = (line.split(',')[2]).strip("\n")
+        print("Calculating:", point[0], point[1], H, ("("+ str(lCount) + "/" + str(linesLen) + ")"))
         pointN, pointLongest = calcViewPolys(point[0], point[1], 90, 2)
         exTime = time.time() - lTime
         with open("./temp/generated.csv", "a+") as saveFile:
-            print("Saving:", point[0], point[1], "; N:", pointN, "; N:", pointLongest["l"], ";", exTime)
-            saveFile.write(str(point[0]) + "," + str(point[1]) + "," + str(pointN) + "," + str(pointLongest["l"]) + str(pointLongest["di"]) + + "\n")
+            print("Saving:", point[0], point[1], "; N:", pointN, "; L:", pointLongest["l"], ";", exTime)
+            saveFile.write(str(point[0]) + "," + str(point[1]) + "," + str(pointN) + "," + str(pointLongest["l"]) + "," + str(pointLongest["di"]) + "," + H + "," + str(exTime) + "\n")
         if pointLongest["l"] > longestLongest:
             longestLongest = pointLongest["l"]
         print("\nTotals:" + " T:" + str(time.time() - startTime) + " Longest:", str(longestLongest))
