@@ -1,5 +1,32 @@
+import sys
+sys.path.append('./py')
+from main import *
+
 from csv import reader
 import math
+import shapefile
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
+def inSweden(x, y):
+    shape = shapefile.Reader("calcData/swedenBorders/ne_10m_admin_0_countries_swe.shp") #250 polygons
+
+    feature = shape.shapeRecords()[50]  #Sweden = 50
+    sweden = feature.shape.__geo_interface__  
+    sweden = sweden["coordinates"] #Revoves unnecessary info
+    
+    x, y = [*euTOwm.transform(x, y)]
+
+    point = Point(x, y)
+    polygon = Polygon(sweden[0][0])
+
+    if polygon.contains(point):
+        return(True)
+        
+    else:
+        return(False)
+                
+
 
 #Returns coordinates for the sightlines path
 def getPath(x, y, lMax, di, step):
@@ -32,14 +59,14 @@ def exportSightlines(n, step):
             if n <= 0:
                 break
 
-            n = n - 1
-
             x = int(row[0])
             y = int(row[1])
             l = float(row[3])
             di = float(row[4])
-
-            sightlines.append(getPath(x, y, l, di, step))
+            
+            if(inSweden(x, y)):
+                sightlines.append(getPath(x, y, l, di, step))
+                n = n - 1
 
     #Exports csv.
             with open("./temp/sightlinePath.csv", "w+") as f:
