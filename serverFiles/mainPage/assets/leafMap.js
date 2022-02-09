@@ -59,23 +59,29 @@ var calcLocation = L.marker(chWGS, {
 //         }
 //     });
 
-//Display points
+// //Display points
+// fetch('http://localhost:3000/api/points')
+//     .then(response => response.json()).then(data => {
+//         for (item in data) {
+//             console.log("Punkt", data[item])
+//             L.circle(data[item], {color: '#F24B6A', radius: 12.5, }).addTo(map);
+//         }
+//     });
+
+//Display lines
 fetch('http://localhost:3000/api/points')
     .then(response => response.json()).then(data => {
-        for (item in data) {
-            console.log("Punkt", data[item])
-            L.circle(data[item], {color: '#F24B6A', radius: 12.5, }).addTo(map);
-        }
-    });
 
-// //Display lines
-// fetch('http://localhost:3000/api/points')
-// .then(response => response.json()).then(data => {
-//     for (item in data) {
-//         console.log("Linje", data[item])
-//         L.polyline(data, {color: '#F24B6A', weight: 4, }).addTo(map);
-//     }
-// });
+        pl = data["pl"]
+        color = data["color"]
+        
+        for (i in pl){
+            a = L.polyline(pl[i], {color: "#" + color[i], weight: 4, opacity: 1}).addTo(map);
+        }
+        
+        map.fitBounds(a.getBounds()); //Zooms the map to the shortest polygon
+
+    });
 
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
 
