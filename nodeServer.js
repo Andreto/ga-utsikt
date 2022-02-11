@@ -31,6 +31,7 @@ function spawnPythonProc(req, res, command, funcData) {
 }
 
 app.use('/', express.static('serverFiles/mainPage'))
+app.use('/sightlines', express.static('serverFiles/sightlines'))
 
 app.get('/api/p', (req, res) => {
     spawnPythonProc(req, res, 
