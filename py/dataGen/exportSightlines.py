@@ -121,4 +121,4 @@ def exportSightlinePath(n, step):
         f.write("sightlinePaths=")
         json.dump(export, f)
 
-exportSightlinePath(3, 50000)  #Number of sightlines displayed, length of each calculation step (m)
+exportSightlinePath(1000, 50000)  #Number of sightlines displayed, length of each calculation step (m)

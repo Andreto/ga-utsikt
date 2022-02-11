@@ -15,8 +15,6 @@ proj4.defs([
     ['ETRS89', '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs']
 ]);
 
-var calcChoordsETRS = proj4('WGS84', 'ETRS89', [18.07, 59.33]);
-
 // Configure map element
 var map = L.map('map').setView([59.33, 18.07], 6);
 mapboxMap = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -35,29 +33,6 @@ googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
     subdomains:['mt0','mt1','mt2','mt3']
 });
 
-// Create map-marker and tile bounding-box
-
-var calcLocation = L.marker([59.33, 18.07], {
-    color: '#FB5258',
-}).addTo(map);
-
-var tileBound;
-fetch('http://localhost:3000/api/grid')
-    .then(response => response.json()).then(data => {
-        tileBound = L.polyline(
-            data.p,
-            { color: '#6977BF', weight: 2 })
-            .addTo(map);
-        for (i in data.l) {
-            label = data.l[i];
-            var marker = new L.marker(label.ch, { opacity: 0 }); //opacity may be set to zero
-            marker.bindTooltip(label.txt, {permanent: true, className: "grid-label", offset: [0, 0] });
-            marker.addTo(map);
-        }
-    });
-
-var pl, hz; // Map-items that displays view-poly-lines and horizon-line
-
 function onResize(e) {
     var leafScale = document.getElementsByClassName('leaflet-control-scale-line')[0];
     var scaleInd = document.getElementById('scale-ind');
@@ -68,16 +43,6 @@ function onResize(e) {
 
 function showGridLabels() {
     document.body.classList.toggle('show-grid-labels');
-}
-
-function updateMapElev(lon, lat) {
-    document.getElementById('elevetion-display').innerText = "...";
-    console.log('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat);
-    fetch('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat)
-    .then(response => response.json()).then(data => {
-        console.log(data.elev);
-        document.getElementById('elevetion-display').innerText = parseFloat(data.elev);
-    });
 }
 
 var scaleElem = document.createElement('div');
@@ -127,24 +92,11 @@ sateliteSvg.addEventListener('mouseout', function () {
     blockMapClick = false;
 });
 
-map.locate({setView: true, maxZoom: 16});
+map.locate({setView: true, maxZoom: 4});
 
 //Display sightlines
 console.log(sightlinePaths.sightline)
-for (i in sightlinePaths.sightline){
+for (i = sightlinePaths.sightline.length - 1; i >= 0; i--){
     console.log(sightlinePaths.sightline[i])
-    a = L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 4, opacity: 1}).addTo(map);
+    a = L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 2, opacity: 0.5}).addTo(map);
 }
-
-// for (const property in hillExport) {
-//     item = hillExport[property]
-//     x = item.y*25 + 4600000
-//     y = -item.x*25 + 4000000
-//     if(item.h > 250){
-//         console.log("Punkt", )
-//         L.circle(proj4('ETRS89', 'WGS84', [x, y]).reverse(), {radius: 12.5, color: '#FF9900'}).addTo(map);
-//     }
-// }
-
-//d0vis = L.polyline(testData0['pl'], {color: '#AACB41', weight: 4}).addTo(map);
-//d1vis = L.polyline(testData1['pl'], {color: '#519ABA', weight: 2}).addTo(map);
