@@ -76,7 +76,7 @@ fetch('http://localhost:3000/api/points')
         color = data["color"]
         
         for (i in pl){
-            a = L.polyline(pl[i], {color: "#" + color[i], weight: 4, opacity: 1}).addTo(map);
+            a = L.polyline(pl[i], {color: color[i], weight: 4, opacity: 1}).addTo(map);
         }
         
         map.fitBounds(a.getBounds()); //Zooms the map to the shortest polygon

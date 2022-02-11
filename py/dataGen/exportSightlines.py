@@ -66,7 +66,7 @@ def assignColors(l):
         lDif2 = lMax - l[i]
 
         for j in cDif:
-            cDif2.append((j * (lDif2/lDif)))
+            cDif2.append((j * ((lDif2) / lDif)))
 
         for j in range(len(cMax)):
             color[i].append(round(cMax[j] - cDif2[j]))
@@ -110,6 +110,6 @@ def exportSightlinePath(n, step):
     #Exports csv of colors
     with open("./temp/colors.csv", "w+") as f:
         for i in color:
-            f.write(str(i) + "\n")
+            f.write("#" + str(i) + "\n")
 
-exportSightlinePath(100, 10000)  #Number of sightlines displayed, length of each calculation step (m)
+exportSightlinePath(25, 10000)  #Number of sightlines displayed, length of each calculation step (m)
