@@ -98,5 +98,5 @@ map.locate({setView: true, maxZoom: 4});
 console.log(sightlinePaths.sightline)
 for (i = sightlinePaths.sightline.length - 1; i >= 0; i--){
     console.log(sightlinePaths.sightline[i])
-    a = L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 2, opacity: 0.5}).addTo(map);
+    a = L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 6, opacity: 1}).addTo(map);
 }

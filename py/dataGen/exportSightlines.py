@@ -48,14 +48,14 @@ def hex_to_rgb(hex):
 
 def assignColors(l):
 
-    cMax = 'F24B6A'
-    cMin = '5D9DF1'
+    cMax = '750016'
+    cMin = 'F4D0D6'
 
     if (len(l) < 2):
         return(cMax)
 
-    cMax = hex_to_rgb('F24B6A')
-    cMin = hex_to_rgb('5D9DF1')
+    cMax = hex_to_rgb(cMax)
+    cMin = hex_to_rgb(cMin)
 
     color = []
 
@@ -109,7 +109,6 @@ def exportSightlinePath(n, step):
             di = float(row[4])
             
             sightlines.append(getPath(x, y, l, di, step))
-            
             n = n - 1
             length.append(l)
 
@@ -121,4 +120,4 @@ def exportSightlinePath(n, step):
         f.write("sightlinePaths=")
         json.dump(export, f)
 
-exportSightlinePath(1000, 50000)  #Number of sightlines displayed, length of each calculation step (m)
+exportSightlinePath(100, 5000)  #Number of sightlines displayed, length of each calculation step (m)

@@ -26,27 +26,31 @@ def inSWE(x, y):
         return(False)
 
 #Exports n sightlines
-def exportSightlines(n):
+def exportSightlines():
 
     slSWE = []
+    a = 0
+    b = 0
 
     with open("./calcData/sightlines/sightlines_l.csv", "r") as csv:    #Reads list of sightlines
 
         for row in reader(csv):
-            if n <= 0:
-                break
+
+            a += 1
 
             x = int(row[0])
             y = int(row[1])
 
             if(inSWE(x, y)):
-                n = n - 1
-                print(n , "sightlines left")
+                
+                b += 1
+
+                print(b , "sightlines found,", a, "sightlines investigated.")
                 slSWE.append(row)
     
-    with open("./calcData/sightlines/sightlines_l_SWE.csv", "w+") as csv:    #Reads list of sightlines
+    with open("./calcData/sightlines/sightlines_l_SWE.csv", "w+") as csv:    #Export list of sightlines
         
         for i in slSWE:
             csv.write(str(i[0]) + "," + str(i[1]) + "," + str(i[2]) + "," + str(i[3]) + "," + str(i[4]) + "\n")
 
-exportSightlines(1000)
+exportSightlines()
