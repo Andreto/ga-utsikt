@@ -438,7 +438,7 @@ def start():
         print("Calculating:", point[0], point[1], ("("+ str(lCount) + "/" + str(linesLen) + ")"))
         pointN, pointLongest = calcViewPolys(point[0], point[1], 360, 2)
         exTime = time.time() - lTime
-        with open("./temp/generated.csv", "w+") as saveFile:
+        with open("./temp/hilltest.csv", "a+") as saveFile:
             print("Saving:", point[0], point[1], "; N:", pointN, "; N:", pointLongest["l"], ";", exTime)
             save = (
                 str(point[0]) + "," + 
