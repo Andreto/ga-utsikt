@@ -434,13 +434,24 @@ def start():
     for line in Lines:
         lTime = time.time()
         print("Line", line)
-        point = list(map(int, line.split(',')[0:2]))
+        point = list(map(int, line.split(',')[0:4]))
         print("Calculating:", point[0], point[1], ("("+ str(lCount) + "/" + str(linesLen) + ")"))
         pointN, pointLongest = calcViewPolys(point[0], point[1], 90, 2)
         exTime = time.time() - lTime
         with open("./temp/generated.csv", "a+") as saveFile:
             print("Saving:", point[0], point[1], "; N:", pointN, "; N:", pointLongest["l"], ";", exTime)
-            saveFile.write(str(point[0]) + "," + str(point[1]) + "," + str(pointN) + "," + str(pointLongest["l"]) + str(pointLongest["di"]) + + "\n")
+            save = (
+                str(point[0]) + "," + 
+                str(point[1]) + "," + 
+                str(pointN) + "," + 
+                str(pointLongest["l"]) + "," +
+                str(pointLongest["di"]) + "," +
+                str(exTime) + "," +
+                str(point[2]) + "," +
+                str(point[3]) + 
+                "\n")
+            print("Saveline:", save)
+            saveFile.write(save)
         if pointLongest["l"] > longestLongest:
             longestLongest = pointLongest["l"]
         print("\nTotals:" + " T:" + str(time.time() - startTime) + " Longest:", str(longestLongest))
