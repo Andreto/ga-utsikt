@@ -425,7 +425,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
 
 def start():
     # f = open('./calcData/calcPoints/calcPoints_h.csv', 'r')
-    f = open('./calcData/hills/hillPoints_46_39.csv', 'r')
+    f = open('./temp/peaks.csv', 'r')
     Lines = f.readlines()
     lCount = 0
     linesLen = len(Lines)
@@ -436,9 +436,9 @@ def start():
         print("Line", line)
         point = list(map(int, line.split(',')[0:4]))
         print("Calculating:", point[0], point[1], ("("+ str(lCount) + "/" + str(linesLen) + ")"))
-        pointN, pointLongest = calcViewPolys(point[0], point[1], 90, 2)
+        pointN, pointLongest = calcViewPolys(point[0], point[1], 360, 2)
         exTime = time.time() - lTime
-        with open("./temp/generated.csv", "a+") as saveFile:
+        with open("./temp/generated.csv", "w+") as saveFile:
             print("Saving:", point[0], point[1], "; N:", pointN, "; N:", pointLongest["l"], ";", exTime)
             save = (
                 str(point[0]) + "," + 
