@@ -170,6 +170,40 @@ def sssAngle(R1, R2, l):
     return(math.acos(cosv) if cosv <= 1 else math.acos(cosv**-1))
 
 
+def createResQueue(lon, lat, res):
+    tLon, tLat, startX, startY = coordToTileIndex(lon, lat)
+    startTileId = tileId(tLon, tLat)
+    queue = {startTileId: []}
+
+    for i in range(res):
+        queue[startTileId].append(
+            {
+                "p": {"x": startX, "y": startY},
+                "di": ((2*math.pi)/res) * i,
+                "start": {"v": -4, "lSurf": 0, "radius": 0},
+                "last": 0
+            }
+        )
+    return(queue)
+
+
+def createDiQueue(lon, lat, dis):
+    tLon, tLat, startX, startY = coordToTileIndex(lon, lat)
+    startTileId = tileId(tLon, tLat)
+    queue = {startTileId: []}
+
+    for di in dis:
+        queue[startTileId].append(
+            {
+                "p": {"x": startX, "y": startY},
+                "di": di,
+                "start": {"v": -4, "lSurf": 0, "radius": 0},
+                "last": 0
+            }
+        )
+    return(queue)
+
+
 def nextTileBorder(tilename, x, y, di):
     xLen = (4000-x) if math.cos(di) > 0 else -1-x
     yLen = -1-y if math.sin(di) > 0 else (4000-y)
@@ -296,7 +330,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         v = math.atan(y / x) if x else -math.pi/2
         
         global exportData
-        exportData.append([x, curveShift, ("a" if v > vMax else "b"), di]) # :TEMP:
+        exportData.append([lSurf, x, y, curveShift, h, vMax, ("a" if v > vMax else "b")]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -312,6 +346,8 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
             vMax = v
         elif llon:
             # Point is not visible, break and append the current line (lladd) to the latlngs list
+            if len(lladd) < 2:
+                lladd = [lladd[0], lladd[0]]
             latlngs.append(lladd)
             llon = False
             lladd = []
@@ -327,7 +363,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         pY -= yChange; pX += xChange
 
     
-    #exportPointsToCSV(data=exportData) # :TEMP:
+    exportPointsToCSV(data=exportData) # :TEMP:
 
     if llon: # Add the current line (lladd) to the latlngs list before returning
         latlngs.append(lladd)
@@ -365,7 +401,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         return(latlngs, 2, ["warn", "Some of the view is not visible due to the lack of DEM data"])
 
 
-def calcViewPolys(startLon, startLat, res, viewHeight):
+def calcViewPolys(queue, viewHeight):
     lines = []  # Sightlines
     hzPoly = []  # Horizon polygon
     exInfo = []  # Extra info about the execution
@@ -375,36 +411,6 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
     demPath = demFileData["path"]
     demTiles = demFileData["tiles"]
     maxElev = json.load(open("./calcData/maxElevations.json", "r"))
-
-    # Calculate the startingpoints tile, and index within that tile
-    tLon, tLat, startX, startY = coordToTileIndex(startLon, startLat)
-    startTileId = tileId(tLon, tLat)
-    queue = {startTileId: []}  # Prepere the queue
-
-
-    # Add all directions for the starting point to the queue
-
-    for i in range(res):
-        queue[startTileId].append(
-            {
-                "p": {"x": startX, "y": startY},
-                "di": ((2*math.pi)/res) * i,
-                "start": {"v": -4, "lSurf": 0, "radius": 0},
-                "last": 0
-            }
-        )
-    #print("Queue:", queue) # :TEMP:
-    #input("Press Enter to continue...") # :TEMP:
-
-    # queue[startTileId].append( # :TEMP:
-    #     {
-    #         "p": {"x": startX, "y": startY},
-    #         "di": ((1.413716694115407)),
-    #         "start": {"v": -4, "lSurf": 0, "radius": 0},
-    #         "last": 0
-    #     }
-    # )
-
     
     while (len(queue) > 0):
         # Get the next tile to process
@@ -431,7 +437,7 @@ def calcViewPolys(startLon, startLat, res, viewHeight):
 
         del queue[tilename]
 
-    plotlyShow(exportData) # :TEMP:
+    # plotlyShow(exportData) # :TEMP:
     return(lines, hzPoly, exInfo)
 
 

@@ -1,3 +1,4 @@
+import queue
 import sys
 import json
 sys.path.append('./py')
@@ -18,10 +19,16 @@ with open('temp/py_log.txt', 'w+') as f:
 
 import time
 start = time.time()
+lon, lat, res, wh = float(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
 
+#queue = createResQueue(lon, lat, res)
+queue = createDiQueue(4477700, 4254400, [5.654866776])
 
+# 4477625 4254375 5.672320069
+# 111586.0367
+# 4477700 4254400 5.654866776
 
-lines, hzPoly, exInfo = calcViewPolys(float(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4]))
+lines, hzPoly, exInfo = calcViewPolys(queue, wh)
 
 print(json.dumps({
     "pl": lines,
