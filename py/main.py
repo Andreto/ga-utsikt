@@ -351,7 +351,10 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
             # Point is not visible, break and append the current line (lladd) to the latlngs list
             if len(lladd) < 2:
                 lladd = [lladd[0], lladd[0]]
-            latlngs.append(lladd)
+            print(json.dumps({
+                "pl": lladd,
+                "info": []
+            }))
             llon = False
             lladd = []
 

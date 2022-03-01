@@ -28,13 +28,7 @@ queue = createResQueue(lon, lat, res)
 # 111586.0367
 # 4477700 4254400 5.654866776
 
-lines, hzPoly, exInfo = calcViewPolys(queue, wh)
-
-print(json.dumps({
-    "pl": lines,
-    "hz": hzPoly,
-    "info": exInfo
-}))
+calcViewPolys(queue, wh)
 
 end = time.time()
 with open('temp/py_exectime.txt', 'a') as f:

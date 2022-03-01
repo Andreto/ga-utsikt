@@ -92,18 +92,18 @@ function loadMapData(latlng) {
     var observerHeight = document.getElementById('obshInput').value;
 
     console.log('http://localhost:3000/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight);
+    if (pl) { pl.remove(map) }
     fetch('http://localhost:3000/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight)
-        .then(response => response.json()).then(data => {
-            console.log(data.toString())
-            if (pl) { pl.remove(map) }
-            if (hz) { hz.remove(map) }
-            pl = L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
-            hz = L.polygon(data['hz'], { color: '#E06C75', weight: 1, fillOpacity: 0, }).addTo(map);
-            mapElem.classList.remove('loading');
-            mapLoaderElem.classList.remove('show');
+        .then(response => {
+            console.log(response);
+            console.log(data.toString());
+            L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
             for (info in data['info']) {
                 console.log(data['info'][info]);
             }
+        }).then(data => {
+            mapElem.classList.remove('loading');
+            mapLoaderElem.classList.remove('show');
         }).catch((err) => {
             mapLogElem.innerHTML = err.message;
             mapLogElem.classList.add('error');
