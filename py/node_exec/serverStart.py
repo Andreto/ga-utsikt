@@ -28,16 +28,23 @@ for path in lookupPaths:
 
 ## Check how many dem-tiles present in the dem-folder
 if (demPath != ""):
-    demList = os.listdir(demPath)
-    for i in range(len(demList)):
-        demList[i] = demList[i].strip(".tif").strip("dem_")
-    if (len(demList) < 100):
-        warnList.append("demtiles-folder only contained " + str(len(demList)) + " tiles")
+    elevDems = os.listdir(demPath + "/elev")
+    for i in range(len(elevDems)):
+        elevDems[i] = elevDems[i].strip(".tif").strip("dem_")
+    if (len(elevDems) < 100):
+        warnList.append("demtiles-folder only contained " + str(len(elevDems)) + " elevation-tiles")
+   
+    objDems = os.listdir(demPath + "/objects")
+    for i in range(len(objDems)):
+        objDems[i] = objDems[i].strip(".tif")
+    if (len(objDems) < 100):
+        warnList.append("demtiles-folder only contained " + str(len(objDems)) + " objectheight-tiles")
+
 else:
     errorList.append("No demtiles-folder was located")
 
 with open("./serverParameters/demfiles.json", "w+") as f:
-    f.write(json.dumps({"path": demPath, "tiles": demList}))
+    f.write(json.dumps({"path": demPath, "tiles": {"elev": elevDems, "obj": objDems}}))
 
 print(json.dumps({
     "err": errorList, 

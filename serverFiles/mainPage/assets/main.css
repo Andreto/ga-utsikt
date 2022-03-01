@@ -143,6 +143,14 @@ body {
     bottom: 44px;
     z-index: 1001;
 }
+#objectheight-display {
+    min-width: 50px;
+    text-align: center;
+    position: absolute;
+    left: 10px;
+    bottom: 70px;
+    z-index: 1001;
+}
 
 textarea:focus, input:focus{
     outline: none;

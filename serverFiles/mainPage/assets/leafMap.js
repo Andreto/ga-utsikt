@@ -132,6 +132,7 @@ function updateMapElev(lon, lat) {
     .then(response => response.json()).then(data => {
         console.log(data.elev);
         document.getElementById('elevetion-display').innerText = parseFloat(data.elev);
+        document.getElementById('objectheight-display').innerText = parseFloat(data.obj);
     });
 }
 

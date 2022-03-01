@@ -91,7 +91,7 @@ app.listen(port, () => {
             for (e in data.err) {console.log(ac.red(data.err[e]))}
             if(data.warn.length) {n = ac.yellow(data.warn.length)} else {n = ac.green(data.warn.length)}
             console.log(n, "warnings");
-            for (e in data.warn) {console.log(ac.yellow(data.warn[e]))}
+            for (e in data.warn) {console.log(ac.yellow('- ' + data.warn[e]))}
         }
     )
 
