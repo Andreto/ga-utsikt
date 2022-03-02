@@ -6,6 +6,7 @@ var locatorButton = document.getElementById('locator-button');
 var locatorSvg = document.getElementById('locator-svg');
 var sateliteButton = document.getElementById('satelite-button');
 var sateliteSvg = document.getElementById('satelite-svg');
+var lineWeightSlider = document.getElementById('line-weight-slider');
 
 var sateliteMapOn = false;
 var blockMapClick = false;
@@ -128,13 +129,12 @@ function showGridLabels() {
 }
 
 function updateMapElev(lon, lat) {
-    document.getElementById('elevetion-display').innerText = "...";
+    document.getElementById('elevetion-display').innerHTML = 'Uppdaterar<br>...';
     console.log('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat);
     fetch('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat)
     .then(response => response.json()).then(data => {
         console.log(data.elev);
-        document.getElementById('elevetion-display').innerText = parseFloat(data.elev);
-        document.getElementById('objectheight-display').innerText = parseFloat(data.obj);
+        document.getElementById('elevetion-display').innerHTML = '<b>Markhöjd:</b> ' + data.elev + ' möh <br><b>Objekthöjd:</b> ' + data.obj + ' m';
     });
 }
 
@@ -185,8 +185,11 @@ sateliteSvg.addEventListener('mouseover', function () {
 sateliteSvg.addEventListener('mouseout', function () {
     blockMapClick = false;
 });
+lineWeightSlider.addEventListener('input', function () {
+    pl.setStyle({ weight: this.value });
+});
 
-map.locate({setView: true, maxZoom: 16});
+map.locate({setView: true, maxZoom: 9});
 
 // for (const property in hillExport) {
 //     item = hillExport[property]
