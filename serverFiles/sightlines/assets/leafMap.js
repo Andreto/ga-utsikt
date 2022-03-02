@@ -6,6 +6,7 @@ var locatorButton = document.getElementById('locator-button');
 var locatorSvg = document.getElementById('locator-svg');
 var sateliteButton = document.getElementById('satelite-button');
 var sateliteSvg = document.getElementById('satelite-svg');
+var sightlinesSlider = document.getElementById('sightlines-n-slider');
 
 var sateliteMapOn = false;
 var blockMapClick = false;
@@ -91,12 +92,35 @@ sateliteSvg.addEventListener('mouseover', function () {
 sateliteSvg.addEventListener('mouseout', function () {
     blockMapClick = false;
 });
+sightlinesSlider.addEventListener('input', function () {
+    hideSightlines();
+    showSightlines();
+    filterSightlines(sightlinesSlider.value);
+});
 
 map.locate({setView: true, maxZoom: 4});
+
+slObjects = [];
 
 //Display sightlines
 console.log(sightlinePaths.sightline)
 for (i = sightlinePaths.sightline.length - 1; i >= 0; i--){
-    console.log(sightlinePaths.sightline[i])
-    a = L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 6, opacity: 1}).addTo(map);
+    slObjects.push(L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 6, opacity: 1}).addTo(map));
+}
+
+function showSightlines() {
+    for (i = 0; i < slObjects.length; i++){
+        map.addLayer(slObjects[i]);
+    }
+}
+function hideSightlines() {
+    for (i = 0; i < slObjects.length; i++){
+        map.removeLayer(slObjects[i]);
+    }
+}
+
+function filterSightlines(n) {
+    for (i = 0; i < slObjects.length-n; i++){
+        map.removeLayer(slObjects[i]);
+    }
 }
