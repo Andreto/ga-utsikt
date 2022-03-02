@@ -308,11 +308,11 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
         # x # absolute x-position
         h = tiles["elev"][round(pY), round(pX)] 
         h = h if h > -10000 else 0
-        objH = tiles["obj"][round(pY), round(pX)]
-        objH = objH if objH >= 0 else 0
-
-        if lSurf > skipObj/25:
-            h += objH
+        if tiles["hasObj"]:
+            objH = tiles["obj"][round(pY), round(pX)]
+            objH = objH if objH >= 0 else 0
+            if lSurf > skipObj/25:
+                h += objH
 
         lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
         pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
@@ -334,7 +334,7 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
         v = math.atan(y / x) if x else -math.pi/2
         
         global exportData
-        exportData.append([lSurf, x, y, curveShift, h, objH, ("a" if v > vMax else "b")]) # :TEMP:
+        # exportData.append([lSurf, x, y, curveShift, h, objH, ("a" if v > vMax else "b")]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -422,7 +422,8 @@ def calcViewPolys(queue, viewHeight):
         element = queue[tilename]
         tiles = {
             "elev": rasterio.open(demPath + "/elev/dem_" + tilename + ".tif").read()[0],
-            "obj": rasterio.open(demPath + "/objects/" + tilename + ".tif").read()[0]
+            "obj": (rasterio.open(demPath + "/objects/" + tilename + ".tif").read()[0] if tilename in demTiles["obj"] else -1),
+            "hasObj": (True if tilename in demTiles["obj"] else False)
         }
 
         # Process all (starting points and directions) in queue for the current tile
