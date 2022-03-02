@@ -96,11 +96,11 @@ function loadMapData(latlng) {
     fetch('http://localhost:3000/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight)
         .then(response => {
             console.log(response);
-            console.log(data.toString());
-            L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
-            for (info in data['info']) {
-                console.log(data['info'][info]);
-            }
+            // console.log(data.toString());
+            // L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
+            // for (info in data['info']) {
+            //     console.log(data['info'][info]);
+            // }
         }).then(data => {
             mapElem.classList.remove('loading');
             mapLoaderElem.classList.remove('show');

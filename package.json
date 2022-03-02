@@ -10,6 +10,7 @@
   "author": "Andreas Törnkvist",
   "license": "MIT",
   "dependencies": {
+    "@rauschma/stringio": "^1.4.0",
     "ansicolor": "^1.1.95",
     "express": "^4.17.1"
   }

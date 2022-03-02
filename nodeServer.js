@@ -5,6 +5,7 @@ const url = require('url');
 const querystring = require('querystring');
 const ac = require ('ansicolor').nice;
 const {spawn} = require('child_process');
+const {chunksToLinesAsync, chomp} = require('@rauschma/stringio');
 const { Console } = require('console');
 
 const port = process.env.PORT || 3000
@@ -16,19 +17,28 @@ function spawnPythonProc(req, res, command, onDataFunc, onEndFunc) {
     // spawn new child process to call the python script
     const pyPrcs = spawn('python', command, { maxBuffer: Infinity });
     // collect data from script
-    pyPrcs.stdout.on('data', function (data) {
-        console.log(ac.lightBlue((new Date()).toISOString()), 'Running', command[0]);
-        dataToSend += data.toString();
-        onDataFunc(req, res, dataToSend);
+    // pyPrcs.stdout.on('data', (data) => {
+    //     console.log(data.toString());
+    //     //console.log(ac.lightBlue((new Date()).toISOString()), 'Running', command[0]);
+    //     //dataToSend += data.toString();
+    //     //onDataFunc(req, res, dataToSend);
+    // });
+    pyPrcs.stderr.on('data', (data) => {
+        console.log(ac.lightRed('process error: ' + data.toString()));
     });
-    // in close event we are sure that stream from child process is closed
+    async function echoReadable(readable) {
+        for await (const line of chunksToLinesAsync(readable)) {
+            console.log("Line: " + line);
+            res.write(chomp(line));
+        }
+    }
     pyPrcs.on('close', (code) => {
         onEndFunc(req, res, code);
     });
-
     pyPrcs.on('error', (err) => {
         console.log(err.ac.red);
-    }); 
+    });
+    echoReadable(pyPrcs.stdout);
 }
 
 app.use('/', express.static('serverFiles/mainPage'))
