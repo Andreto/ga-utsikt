@@ -367,7 +367,7 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
         pY -= yChange; pX += xChange
 
     
-    exportPointsToCSV(data=exportData) # :TEMP:
+    # exportPointsToCSV(data=exportData) # :TEMP:
 
     if llon: # Add the current line (lladd) to the latlngs list before returning
         latlngs.append(lladd)

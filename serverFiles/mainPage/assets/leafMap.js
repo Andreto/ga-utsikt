@@ -17,6 +17,7 @@ proj4.defs([
 
 var calcChoordsETRS = proj4('WGS84', 'ETRS89', [18.07, 59.33]);
 
+
 // Configure map element
 var map = L.map('map').setView([59.33, 18.07], 6);
 mapboxMap = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -41,8 +42,9 @@ var calcLocation = L.marker([59.33, 18.07], {
     color: '#FB5258',
 }).addTo(map);
 
-var tileBound;
-fetch('http://localhost:3000/api/grid')
+function showTileGrids() {
+    var tileBound;
+    fetch('http://localhost:3000/api/grid')
     .then(response => response.json()).then(data => {
         tileBound = L.polyline(
             data.p,
@@ -55,7 +57,7 @@ fetch('http://localhost:3000/api/grid')
             marker.addTo(map);
         }
     });
-
+}
 // fetch('http://localhost:3000/api/points')
 //     .then(response => response.json()).then(data => {
 //         for (item in data) {
