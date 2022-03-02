@@ -285,7 +285,7 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
     if "h" in point["start"]:
         h0 = point["start"]["h"]
     else:
-        h0 = tiles["elev"][pY, pX] if tiles["elev"][pY, pX] > -1000 else 0  # Elevation of the first point
+        h0 = tiles["elev"][pY, pX] if tiles["elev"][pY, pX] > -10000 else 0  # Elevation of the first point
     
     hBreak = False  # Keeps track of whether the calculation stopped due to max elevation being reached
 
@@ -306,12 +306,13 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
     while inBounds(pX, pY, -.5, -.5, 3999.5, 3999.5):
         # h # the surface-height perpendicular to the ellipsoid.
         # x # absolute x-position
-        h = tiles["elev"][round(pY), round(pX)]
+        h = tiles["elev"][round(pY), round(pX)] 
+        h = h if h > -10000 else 0
         objH = tiles["obj"][round(pY), round(pX)]
+        objH = objH if objH >= 0 else 0
+
         if lSurf > skipObj/25:
             h += objH
-        if h < -1000: 
-            h = 0
 
         lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
         pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
@@ -427,7 +428,7 @@ def calcViewPolys(queue, viewHeight):
         # Process all (starting points and directions) in queue for the current tile
         while len(element) > 0:
             point = element.pop(0)
-            line, status, ex = calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, 100)
+            line, status, ex = calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, 200)
             # Add visible lines to the lines list
             for l in line:
                 lines.append(l)
