@@ -95,8 +95,8 @@ sateliteSvg.addEventListener('mouseout', function () {
 map.locate({setView: true, maxZoom: 4});
 
 //Display sightlines
-console.log(sightlinePaths.sightline)
+//console.log(sightlinePaths.sightline)
 for (i = sightlinePaths.sightline.length - 1; i >= 0; i--){
-    console.log(sightlinePaths.sightline[i])
-    a = L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 6, opacity: 1}).addTo(map);
+    console.log(sightlinePaths.color[i])
+    L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 6, opacity: 1}).addTo(map);
 }
