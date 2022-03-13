@@ -1,4 +1,5 @@
-# Utsiktsberäkning # Andreas Törnkvist, Moltas Lindell # 2021
+# Utsiktsberäkning 
+# Copyright (c) 2022 Andreas Törnkvist & Moltas Lindell | CC BY-NC-SA 4.0
 
 import json
 import math

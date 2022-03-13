@@ -1,3 +1,5 @@
+# Utsiktsberäkning | Copyright (c) 2022 Andreas Törnkvist & Moltas Lindell | CC BY-NC-SA 4.0
+
 import queue
 import sys
 import json

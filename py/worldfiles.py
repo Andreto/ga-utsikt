@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Andreas Törnkvist | MIT License
+
 import math
 
 class worldfile:

@@ -1,3 +1,5 @@
+# Utsiktsberäkning | Copyright (c) 2022 Andreas Törnkvist & Moltas Lindell | CC BY-NC-SA 4.0
+
 import sys
 sys.path.append('./py')
 from main import *

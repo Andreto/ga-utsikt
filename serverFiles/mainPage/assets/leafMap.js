@@ -1,3 +1,5 @@
+// Utsiktsberäkning | Copyright (c) 2022 Andreas Törnkvist & Moltas Lindell | CC BY-NC-SA 4.0
+
 var mapElem = document.getElementById('map');
 var mapLogElem = document.getElementById('map-log');
 var mapLoaderElem = document.getElementById('map-loader');
