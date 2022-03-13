@@ -103,7 +103,7 @@ map.locate({setView: true, maxZoom: 4});
 slObjects = [];
 
 //Display sightlines
-console.log(sightlinePaths.sightline)
+//console.log(sightlinePaths.sightline)
 for (i = sightlinePaths.sightline.length - 1; i >= 0; i--){
     slObjects.push(L.polyline(sightlinePaths.sightline[i], {color: "#" + sightlinePaths.color[i], weight: 6, opacity: 1}).addTo(map));
 }

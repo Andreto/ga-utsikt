@@ -48,11 +48,12 @@ def hex_to_rgb(hex):
 
 def assignColors(l):
 
-    cMax = '750016'
+    cMax = '606BA6'
     cMin = 'F4D0D6'
 
+    #If only one sightline is exported, the assigned color is cMax
     if (len(l) < 2):
-        return(cMax)
+        return([cMax])
 
     cMax = hex_to_rgb(cMax)
     cMin = hex_to_rgb(cMin)
@@ -64,7 +65,7 @@ def assignColors(l):
 
     lDif = lMax - lMin
 
-    #Defines difference between cMax abd cMin
+    #Defines difference between cMax and cMin.
     cDif = []
     for i in range(len(cMax)):
         cDif.append(cMax[i] - cMin[i])
@@ -120,4 +121,4 @@ def exportSightlinePath(n, step):
         f.write("sightlinePaths=")
         json.dump(export, f)
 
-exportSightlinePath(100, 5000)  #Number of sightlines displayed, length of each calculation step (m)
+exportSightlinePath(1, 500)  #Number of sightlines displayed, length of each calculation step (m)
