@@ -6,6 +6,7 @@ var locatorButton = document.getElementById('locator-button');
 var locatorSvg = document.getElementById('locator-svg');
 var sateliteButton = document.getElementById('satelite-button');
 var sateliteSvg = document.getElementById('satelite-svg');
+var lineWeightSlider = document.getElementById('line-weight-slider');
 
 var sateliteMapOn = false;
 var blockMapClick = false;
@@ -16,6 +17,7 @@ proj4.defs([
 ]);
 
 var calcChoordsETRS = proj4('WGS84', 'ETRS89', [18.07, 59.33]);
+
 
 // Configure map element
 var map = L.map('map').setView([59.33, 18.07], 6);
@@ -41,8 +43,9 @@ var calcLocation = L.marker([59.33, 18.07], {
     color: '#FB5258',
 }).addTo(map);
 
-var tileBound;
-fetch('http://localhost:3000/api/grid')
+function showTileGrids() {
+    var tileBound;
+    fetch('http://localhost:3000/api/grid')
     .then(response => response.json()).then(data => {
         tileBound = L.polyline(
             data.p,
@@ -55,7 +58,7 @@ fetch('http://localhost:3000/api/grid')
             marker.addTo(map);
         }
     });
-
+}
 // fetch('http://localhost:3000/api/points')
 //     .then(response => response.json()).then(data => {
 //         for (item in data) {
@@ -126,12 +129,12 @@ function showGridLabels() {
 }
 
 function updateMapElev(lon, lat) {
-    document.getElementById('elevetion-display').innerText = "...";
+    document.getElementById('elevetion-display').innerHTML = 'Uppdaterar<br>...';
     console.log('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat);
     fetch('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat)
     .then(response => response.json()).then(data => {
         console.log(data.elev);
-        document.getElementById('elevetion-display').innerText = parseFloat(data.elev);
+        document.getElementById('elevetion-display').innerHTML = '<b>Markhöjd:</b> ' + data.elev + ' möh <br><b>Objekthöjd:</b> ' + data.obj + ' m';
     });
 }
 
@@ -182,8 +185,11 @@ sateliteSvg.addEventListener('mouseover', function () {
 sateliteSvg.addEventListener('mouseout', function () {
     blockMapClick = false;
 });
+lineWeightSlider.addEventListener('input', function () {
+    pl.setStyle({ weight: this.value });
+});
 
-map.locate({setView: true, maxZoom: 16});
+map.locate({setView: true, maxZoom: 9});
 
 // for (const property in hillExport) {
 //     item = hillExport[property]

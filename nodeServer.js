@@ -20,9 +20,11 @@ function spawnPythonProc(req, res, command, funcData) {
      console.log(ac.lightBlue((new Date()).toISOString()), 'Running', command[0]);
      dataToSend += data.toString();
     });
-    // in close event we are sure that stream from child process is closed
     pyPrcs.on('close', (code) => {
         funcData(req, res, dataToSend, code);
+    });
+    pyPrcs.stderr.on('data', (data) => {
+        console.log(ac.red((new Date()).toISOString()), ac.lightRed('Error: ' + data.toString()));
     });
 
     pyPrcs.on('error', (err) => {
@@ -91,7 +93,7 @@ app.listen(port, () => {
             for (e in data.err) {console.log(ac.red(data.err[e]))}
             if(data.warn.length) {n = ac.yellow(data.warn.length)} else {n = ac.green(data.warn.length)}
             console.log(n, "warnings");
-            for (e in data.warn) {console.log(ac.yellow(data.warn[e]))}
+            for (e in data.warn) {console.log(ac.yellow('- ' + data.warn[e]))}
         }
     )
 

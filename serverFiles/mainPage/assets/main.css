@@ -136,14 +136,13 @@ body {
     padding: 4px 10px;
 }
 #elevetion-display {
-    min-width: 50px;
-    text-align: center;
+    min-width: 60px;
+    text-align: left;
     position: absolute;
     left: 10px;
     bottom: 44px;
     z-index: 1001;
 }
-
 textarea:focus, input:focus{
     outline: none;
 }
@@ -174,6 +173,11 @@ textarea:focus, input:focus{
 }
 body.show-grid-labels .grid-label {
     display: block;
+}
+
+input[type=range] {
+    top: 5px;
+    position: relative;
 }
 
 

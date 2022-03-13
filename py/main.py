@@ -228,7 +228,7 @@ def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev, s
     d_lSurf = math.sqrt(((lon-lonNext)/25)**2 + ((lat-latNext)/25)**2)
     lSurf += d_lSurf
 
-    if tilenameNext in demTiles:
+    if tilenameNext in demTiles["elev"]:
         if False: # :TODO: # [4339550, 3914250]
             l = 0
             step = 4
@@ -265,7 +265,7 @@ def checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, demTiles, maxElev, s
         return(2, "")
 
 # Returns a leaflet polyline object representing visible areas
-def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
+def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj):
 
     pX = point["p"]["x"]
     pY = point["p"]["y"]
@@ -285,7 +285,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     if "h" in point["start"]:
         h0 = point["start"]["h"]
     else:
-        h0 = tile[pY, pX] if tile[pY, pX] > -1000 else 0  # Elevation of the first point
+        h0 = tiles["elev"][pY, pX] if tiles["elev"][pY, pX] > -10000 else 0  # Elevation of the first point
     
     hBreak = False  # Keeps track of whether the calculation stopped due to max elevation being reached
 
@@ -306,9 +306,13 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
     while inBounds(pX, pY, -.5, -.5, 3999.5, 3999.5):
         # h # the surface-height perpendicular to the ellipsoid.
         # x # absolute x-position
-        h = tile[round(pY), round(pX)]
-        if h < -1000: 
-            h = 0
+        h = tiles["elev"][round(pY), round(pX)] 
+        h = h if h > -10000 else 0
+        if tiles["hasObj"]:
+            objH = tiles["obj"][round(pY), round(pX)]
+            objH = objH if objH >= 0 else 0
+            if lSurf > skipObj/25:
+                h += objH
 
         lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
         pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
@@ -330,7 +334,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         v = math.atan(y / x) if x else -math.pi/2
         
         global exportData
-        exportData.append([lSurf, x, y, curveShift, h, vMax, ("a" if v > vMax else "b")]) # :TEMP:
+        # exportData.append([lSurf, x, y, curveShift, h, objH, ("a" if v > vMax else "b")]) # :TEMP:
 
         if v > vMax and x > 0:
             # Point is visible, add it to the current line (lladd)
@@ -363,7 +367,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
         pY -= yChange; pX += xChange
 
     
-    exportPointsToCSV(data=exportData) # :TEMP:
+    # exportPointsToCSV(data=exportData) # :TEMP:
 
     if llon: # Add the current line (lladd) to the latlngs list before returning
         latlngs.append(lladd)
@@ -394,7 +398,7 @@ def calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev):
             return(latlngs, 2, ["warn", "Some of the view is not visible due to the lack of DEM data"])
             
 
-    elif tileId(tLon, tLat) in demTiles:
+    elif tileId(tLon, tLat) in demTiles["elev"]:
         queueObj["p"] = {"x": stX, "y": stY}
         return(latlngs, 1, [tileId(tLon, tLat), queueObj])
     else:
@@ -416,12 +420,16 @@ def calcViewPolys(queue, viewHeight):
         # Get the next tile to process
         tilename = list(queue)[0]
         element = queue[tilename]
-        tile = rasterio.open(demPath + "/dem_" + tilename + ".tif").read()[0]
+        tiles = {
+            "elev": rasterio.open(demPath + "/elev/dem_" + tilename + ".tif").read()[0],
+            "obj": (rasterio.open(demPath + "/objects/" + tilename + ".tif").read()[0] if tilename in demTiles["obj"] else -1),
+            "hasObj": (True if tilename in demTiles["obj"] else False)
+        }
 
         # Process all (starting points and directions) in queue for the current tile
         while len(element) > 0:
             point = element.pop(0)
-            line, status, ex = calcViewLine(tile, point, tilename, viewHeight, demTiles, maxElev)
+            line, status, ex = calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, 200)
             # Add visible lines to the lines list
             for l in line:
                 lines.append(l)
@@ -442,21 +450,10 @@ def calcViewPolys(queue, viewHeight):
 
 
 def main():
-    # t = [xmin, ymin] #
-    t = [46, 39]
-    tile = rasterio.open("./demtiles/dem_" +
-                         str(t[0]) + "_" + str(t[1]) + ".tif").read()[0]
-    # y, x ; y: upp till ner ; x: höger till vänster
-
-    points = getLinePointsAndCoords(
-        tile, *coordToTileIndex(15.99838, 58.60397), math.pi/2)[0]
-
-    # y, x = proj.transform(proj.Proj('epsg:3035'))
-
-    #print(tileIndexToCoord(t[0], t[1], x0, y0), tileIndexToCoord(t[0], t[1], x1, y1))
-
-    #print(wmTOeu.transform(Lon, Lat))
-
-###### MAIN EXC ######
-
-# print(radiusCalculation(58.2))
+    tilename = "45_39"
+    demFileData = json.load(open("./serverParameters/demfiles.json", "r"))
+    demPath = demFileData["path"]
+    demTiles = demFileData["tiles"]
+    tile = rasterio.open(demPath + "/objects/" + tilename + ".tif").read()
+    print(tile[0][79][5])
+#main()

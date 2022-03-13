@@ -8,7 +8,7 @@ l = []
 
 demInfo = json.load(open("./serverParameters/demfiles.json", "r"))
 
-for tile in demInfo["tiles"]:
+for tile in demInfo["tiles"]["elev"]:
     tileCh = list(map(int, tile.split("_")))
     borders = getTileArea(*tileCh)
     p.append(borders)
