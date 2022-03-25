@@ -19,12 +19,12 @@ const maxCurveRadius = (equatorRadius**2)/poleRadius
 const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demfiles.json'), 'utf8'));
 const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));
 
-function openTile(demMeta, tilename){
+function openTile(tilename){
     tile = {}
-    console.log(path.join(demMeta.path,('elev/dem_' + tilename + '.tif')))
-    tile.elev = gdal.open(path.join(demMeta.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels
-    if (demMeta.tiles.obj.includes(tilename)) {
-        tile.obj = gdal.open(path.join(demMeta.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels
+    console.log(path.join(demFileData.path,('elev/dem_' + tilename + '.tif')))
+    tile.elev = gdal.open(path.join(demFileData.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels
+    if (demFileData.tiles.obj.includes(tilename)) {
+        tile.obj = gdal.open(path.join(demFileData.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels
         tile.hasObj = true
     } else {
         tile.hasObj = false
@@ -82,19 +82,19 @@ function inBounds(x, y, top, left, bottom, right) {
 function pointSteps(di){ // The change between calculation-points should be at least 1 full pixel in x or y direction
     let xChange; let yChange;
     if (Math.abs(Math.cos(di)) > Math.abs(Math.sin(di))){
-        xChange = (math.cos(di)/abs(math.cos(di)));
-        yChange = abs(math.tan(di)) * (math.sin(di) ? (math.sin(di) / abs(math.sin(di))) : 0);
+        xChange = (Math.cos(di)/Math.abs(Math.cos(di)));
+        yChange = Math.abs(Math.tan(di)) * (Math.sin(di) ? (Math.sin(di) / Math.abs(Math.sin(di))) : 0);
     } else {
-        yChange = (math.sin(di)/abs(math.sin(di)));
-        xChange = ((math.tan(di)) ? abs(1/(math.tan(di))) : 1) * (math.cos(di) ? (math.cos(di) / abs(math.cos(di))) : 0);
+        yChange = (Math.sin(di)/Math.abs(Math.sin(di)));
+        xChange = ((Math.tan(di)) ? Math.abs(1/(Math.tan(di))) : 1) * (Math.cos(di) ? (Math.cos(di) / Math.abs(Math.cos(di))) : 0);
     }    
-    let lChange = math.sqrt(xChange**2 + yChange**2);
+    let lChange = Math.sqrt(xChange**2 + yChange**2);
     return({'x': xChange, 'y': yChange, 'l': lChange});
 }
 
 function sssAngle(r1, r2, l){
     let cosv = ((r1**2 + r2**2 - l**2)/(2*r1*r2));
-    return((cosv <= 1) ? math.acos(cosv) : math.acos(cosv**-1));
+    return((cosv <= 1) ? Math.acos(cosv) : Math.acos(cosv**-1));
 }
 
 function createResQueue(lon, lat, res) {
@@ -132,17 +132,17 @@ function createDiQueue(lon, lat, dis) {
 }
 
 function nextTileBorder(tilename, x, y, di) {
-    let xLen = ((math.cos(di) > 0) ? 4000-x : -1-x);
-    let yLen = ((math.sin(di) > 0) ? -1-y : 4000-y);
-    let xCost = (math.cos(di) ? abs(xLen / math.cos(di)) : 10000);
-    let yCost = (math.sin(di) ? abs(yLen / math.sin(di)) : 10000);
+    let xLen = ((Math.cos(di) > 0) ? 4000-x : -1-x);
+    let yLen = ((Math.sin(di) > 0) ? -1-y : 4000-y);
+    let xCost = (Math.cos(di) ? Math.abs(xLen / Math.cos(di)) : 10000);
+    let yCost = (Math.sin(di) ? Math.abs(yLen / Math.sin(di)) : 10000);
     let nX; let nY;
 
     if (xCost < yCost){
         nX = x + xLen;
-        nY = y + abs(xLen * math.tan(di))*((math.sin(di) > 0) ? 1 : -1);
+        nY = y + Math.abs(xLen * Math.tan(di))*((Math.sin(di) > 0) ? 1 : -1);
     } else {
-        nX = x + abs(yLen / math.tan(di))*((math.cos(di) > 0) ? 1 : -1);
+        nX = x + Math.abs(yLen / Math.tan(di))*((Math.cos(di) > 0) ? 1 : -1);
         nY = y + yLen;
     }
     return(coordToTileIndex(...tileIndexToCoord(...tileIndex(tilename), nX, nY))); //:TODO: Check if this is correct
@@ -157,19 +157,19 @@ function checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, startAngle, sta
     lSurf += d_lSurf;
 
     if (demFileData.tiles.elev.includes(tilenameNext)) {
-        let curveShift = maxCurveRadius - math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius;
-        let requiredElev = math.sin((lSurf*25)/maxCurveRadius)*math.tan(vMax) + curveShift + hOffset;
+        let curveShift = maxCurveRadius - Math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius;
+        let requiredElev = Math.sin((lSurf*25)/maxCurveRadius)*Math.tan(vMax) + curveShift + hOffset;
         let angle = (lSurf*25)/earthRadius;
 
         if (maxElevations[tilenameNext] < requiredElev) {
             if (maxElevations.global < requiredElev) {
-                return(0, '');
+                return([0, '', {}]);
             } else {
                 return(checkNextTile(tilenameNext, xNext, yNext, di, vMax, hOffset, lSurf, startAngle, startRadius, depth+1));
             }
         } else {
-            [lon, lat] = proj4('EU', 'WM', [tLon*100000, tLat*100000]);
-            return(1, [tilenameNext, {'x': xNext, 'y': yNext, 'lSurf': lSurf, 'radius': radiusCalculation(lat), 'angle': angle}])
+            [lon, lat] = proj4('EU', 'WM', tileIndexToCoord(...tileIndex(tilename), xNext, yNext));
+            return([1, tilenameNext, {'x': xNext, 'y': yNext, 'lSurf': lSurf, 'radius': radiusCalculation(lat), 'angle': angle}])
         }
     }
 }
@@ -188,6 +188,8 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
     let lladd = [];
     let llon = [];
 
+    let exportObj = []; // :TEMP:
+
     let [lon, lat] = proj4('EU', "WM", tileIndexToCoord(...tileIndex(tilename), pX, pY));
     let startRadius = (point.start.radius ? point.start.radius : radiusCalculation(lat));  // Earths radius in the first point (in meters)
     let ps = pointSteps(di);
@@ -203,9 +205,9 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
         h0 = tiles.elev.get(pX, pY);
     }
 
-    let h; let objH; let x; let pRadius;
+    let h; let objH; let x; let y; let v; let pRadius; let curveShift; let requiredElev;
 
-    while (inBounds(pX, pY, -.5, -.5, 3999.5, 3999.5)){
+    while (inBounds(pX, pY, -.5, -.5, 3999.5, 3999.5)) {
         h = tiles.elev.get(Math.round(pX), Math.round(pY));
         h = (h > -10000 ? h : 0);
         if (tiles.hasObj) {
@@ -220,13 +222,131 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
         pRadius = radiusCalculation(lat);
 
         x = Math.sin(calcAngle)*pRadius;
+        curveShift = Math.sqrt(pRadius**2 - x**2);
+        x -= Math.sin(calcAngle)*h;
+        y = Math.cos(calcAngle)*h + curveShift - h0 - viewHeight;
         
+        calcAngle += sssAngle(lastPoint.radius, pRadius, ps.l);
+        lastPoint = {
+            'radius': pRadius,
+            'angle': calcAngle
+        };
+        v = (x != 0 ? Math.atan(y/x) : -Math.PI/2);
+
+        if (v > vMax && x > 0) {
+            if (llon) {
+                if (lladd.length > 1) {
+                    lladd[1] = [lat, lon];
+                } else {
+                    lladd.push([lat, lon]);
+                }
+            } else {
+                lladd.push([lat, lon]);
+                llon = true;
+            }
+            vMax = v;
+        } else if (llon) {
+            if (lladd.length < 2) {
+                lladd = [lladd[0], lladd[0]];
+            }
+            latlngs.push(lladd);
+            llon = false;
+            lladd = [];
+        }
+
+        requiredElev = (Math.tan(vMax)*x) - curveShift + h0 + viewHeight
+        if (requiredElev > tileMaxElev && x > 0) {
+            hBreak = true;
+            break;
+        }
+
+        lSurf += ps.l;
+        pX += ps.x;
+        pY += ps.y;
     }
 
+    if (llon) {
+        latlngs.push(lladd);
+    }
 
+    queueObj = {
+        'p': {'x': 0, 'y': 0},
+        'di': di,
+        'start': {'v': vMax, 'lSurf': lSurf, 'radius': startRadius, 'h': h0},
+        'last': lastPoint
+    }
 
+    let tLon; let tLat; let stX; let stY;
+    [tLon, tLat, stX, stY] = coordToTileIndex(...tileIndexToCoord(...tileIndex(tilename), Math.round(pX), Math.round(pY)))
 
+    let cnCode; let cnObj;
 
+    if (hBreak) {
+        [cnCode, cnTile, cnObj] = checkNextTile(tilename, stX, stY, di, vMax, (h0 + viewHeight), lSurf, lastPoint.angle, startRadius, 0);
+        
+        if (cnCode == 0) {
+            return(latlangs, 0, '');
+        } else if (cnCode == 1) {
+            queueObj.p = {'x': cnObj.x, 'y': cnObj.y};
+            queueObj.start.lSurf = cnObj.lSurf;
+            queueObj.last = {'radius': cnObj.radius, 'angle': cnObj.angle}
+            return({'ll': latlngs, 'status': 1, 'msg': {'t': cnTile, 'q': queueObj}});
+        } else if (cnCode == 2) {
+            return({'ll': latlngs, 'status': 2, 'msg': ["warn", "Some of the view is not visible due to the lack of DEM data"]});
+        }
+    } else if (demFileData.tiles.elev.includes(tileId(tLon, tLat))) {
+        queueObj.p = {'x': stX, 'y': stY};
+        return({'ll': latlngs, 'status': 1, 'msg': {'t': tileId(tLon, tLat), 'q': queueObj}});
+    } else {
+        return({'ll': latlngs, 'status': 2, 'msg': ["warn", "Some of the view is not visible due to the lack of DEM data"]});
+    }
+}
+
+function calcVeiwPolys(queue, viewHeight) {
+    let lines = [];
+    let hzPoly = [];
+    let exInfo = [];
+
+    let skipObj = 200;
+    
+    let tilename; let element; let tile; let point; let vLine
+
+    
+
+    while (Object.keys(queue).length > 0) {
+        tilename = Object.keys(queue)[0];
+        element = queue[tilename];
+        delete queue[tilename];
+
+        tile = openTile(tilename);
+
+        while (element.length > 0) {
+            point = element.pop();
+            vLine = calcViewLine(tile, point, tilename, viewHeight, skipObj);
+
+            for (let i = 0; i < vLine.ll.length; i++) {
+                lines.push(vLine.ll[i]);
+            }
+
+            if (vLine.status == 1) {
+                if (queue.hasOwnProperty(vLine.msg.t)) {
+                    queue[vLine.msg.t].push(vLine.msg.q);
+                } else {
+                    queue[vLine.msg.t] = [vLine.msg.q];
+                }
+            } else if (vLine.status == 2 && ! exInfo.includes(vLine.msg)) {
+                exInfo.push(vLine.msg);
+            }
+        }
+        
+        delete queue[tilename];
+    }
+    return({'lines': lines, 'hzPoly': hzPoly, 'exInfo': exInfo});
+}
+
+function getVeiw(lon, lat, res, viewHeight) {
+    queue = createResQueue(lon, lat, res);
+    console.log(calcVeiwPolys(queue, viewHeight));
 }
 
 // var queue = createResQueue(200, 500, 8)
@@ -234,5 +354,10 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
 //     queue
 // )
 
+getVeiw(4511250, 3320700, 9, 2)
+
 //tile = openTile(demFileData, '45_39')
 //console.log(tile.elev.get(1, 0))
+
+
+
