@@ -7,8 +7,6 @@ const gdal = require('gdal');
 const proj4 = require('proj4');
 
 proj4.defs([
-    ['WGS84', '+proj=longlat +datum=WGS84 +no_defs'],
-    ['ETRS89', '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs']
     ['WM', '+proj=longlat +datum=WGS84 +no_defs'],
     ['EU', '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs']
 ]);
@@ -18,8 +16,24 @@ const equatorRadius = 6378137
 const poleRadius = 6356752
 const maxCurveRadius = (equatorRadius**2)/poleRadius
 
+const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demfiles.json'), 'utf8'));
+const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));
+
+function openTile(demMeta, tilename){
+    tile = {}
+    console.log(path.join(demMeta.path,('elev/dem_' + tilename + '.tif')))
+    tile.elev = gdal.open(path.join(demMeta.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels
+    if (demMeta.tiles.obj.includes(tilename)) {
+        tile.obj = gdal.open(path.join(demMeta.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels
+        tile.hasObj = true
+    } else {
+        tile.hasObj = false
+    }
+    return(tile);
+}
+
 function tileIndexToCoord(tLon, tLat, x, y) {
-    return(tLon*100000 + x*25, (tLat+1)*100000 - (y+1)*25);
+    return([tLon*100000 + x*25, (tLat+1)*100000 - (y+1)*25]);
 }
 
 function coordToTileIndex(lon, lat) {
@@ -27,12 +41,12 @@ function coordToTileIndex(lon, lat) {
     let tLat = Math.floor(lat/100000);
     let x = Math.round((lon-(tLon*100000))/25);
     let y = Math.round(3999-((lat-(tLat*100000))/25));
-    return(tLon, tLat, x, y)
+    return([tLon, tLat, x, y]);
 }
 
 function tileId(tLon, tLat) { // Convert tile-index (array [x, y]) to tile-id (string "x_y")
-    return(toString(tLon) + "_" + toString(tLat));
-} 
+    return(tLon.toString() + "_" + tLat.toString());
+}
     
 function tileIndex(tilename){ // Convert tile-id (string "x_y") to tile-index (array [x, y])
     let x = parseInt(tilename.split("_")[0]);
@@ -75,7 +89,7 @@ function pointSteps(di){ // The change between calculation-points should be at l
         xChange = ((math.tan(di)) ? abs(1/(math.tan(di))) : 1) * (math.cos(di) ? (math.cos(di) / abs(math.cos(di))) : 0);
     }    
     let lChange = math.sqrt(xChange**2 + yChange**2);
-    return(xChange, yChange, lChange);
+    return({'x': xChange, 'y': yChange, 'l': lChange});
 }
 
 function sssAngle(r1, r2, l){
@@ -83,9 +97,39 @@ function sssAngle(r1, r2, l){
     return((cosv <= 1) ? math.acos(cosv) : math.acos(cosv**-1));
 }
 
-// def createResQueue(lon, lat, res):
+function createResQueue(lon, lat, res) {
+    let [tLon, tLat, startX, startY] = coordToTileIndex(lon, lat);
+    let startTileId = tileId(tLon, tLat);
+    let queue = {};
+    queue[startTileId] = [];
 
-// def createDiQueue(lon, lat, dis):
+    for (i = 0; i < res; i++) {
+        queue[startTileId].push({
+            'p': {'x': startX, 'y': startY},
+            'di': ((2*Math.PI)/res) * i,
+            'start': {'v': -4, 'lSurf': 0, 'radius': 0},
+            'last': 0 
+        });
+    }
+    return(queue);
+}
+
+function createDiQueue(lon, lat, dis) {
+    let [tLon, tLat, startX, startY] = coordToTileIndex(lon, lat);
+    let startTileId = tileId(tLon, tLat);
+    let queue = {};
+    queue[startTileId] = [];
+
+    for (i = 0; i < dis.length; i++) {
+        queue[startTileId].push({
+            'p': {'x': startX, 'y': startY},
+            'di': dis[i],
+            'start': {'v': -4, 'lSurf': 0, 'radius': 0},
+            'last': 0 
+        });
+    }
+    return(queue);
+}
 
 function nextTileBorder(tilename, x, y, di) {
     let xLen = ((math.cos(di) > 0) ? 4000-x : -1-x);
@@ -96,30 +140,99 @@ function nextTileBorder(tilename, x, y, di) {
 
     if (xCost < yCost){
         nX = x + xLen;
-        nY = y + abs(xLen * math.tan(di))*((math.sin(di) > 0) ? 1 : -1)
+        nY = y + abs(xLen * math.tan(di))*((math.sin(di) > 0) ? 1 : -1);
     } else {
-        nX = x + abs(yLen / math.tan(di))*((math.cos(di) > 0) ? 1 : -1)
-        nY = y + yLen
+        nX = x + abs(yLen / math.tan(di))*((math.cos(di) > 0) ? 1 : -1);
+        nY = y + yLen;
     }
-    return(coordToTileIndex(tileIndexToCoord(tileIndex(tilename), nX, nY))) //:TODO: Check if this is correct
+    return(coordToTileIndex(...tileIndexToCoord(...tileIndex(tilename), nX, nY))); //:TODO: Check if this is correct
 }
 
-function openTile(demMeta, tilename){
-    tile = {}
-    console.log(path.join(demMeta.path,('elev/dem_' + tilename + '.tif')))
-    tile.elev = gdal.open(path.join(demMeta.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels
-    if (demMeta.tiles.obj.includes(tilename)) {
-        tile.obj = gdal.open(path.join(demMeta.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels
-        tile.hasObj = true
-    } else {
-        tile.hasObj = false
+function checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, startAngle, startRadius, depth) {
+    let [tLonNext, tLatNext, xNext, yNext] = nextTileBorder(tilename, x, y, di);
+    let tilenameNext = tileId(tLonNext, tLatNext);
+    let [lon, lat] = tileIndexToCoord(...tileIndex(tilename), x, y);
+    let [lonNext, latNext] = tileIndexToCoord(tLonNext, tLatNext, xNext, yNext);
+    let d_lSurf = Math.sqrt(((lon-lonNext)/25)**2 + ((lat-latNext)/25)**2);
+    lSurf += d_lSurf;
+
+    if (demFileData.tiles.elev.includes(tilenameNext)) {
+        let curveShift = maxCurveRadius - math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius;
+        let requiredElev = math.sin((lSurf*25)/maxCurveRadius)*math.tan(vMax) + curveShift + hOffset;
+        let angle = (lSurf*25)/earthRadius;
+
+        if (maxElevations[tilenameNext] < requiredElev) {
+            if (maxElevations.global < requiredElev) {
+                return(0, '');
+            } else {
+                return(checkNextTile(tilenameNext, xNext, yNext, di, vMax, hOffset, lSurf, startAngle, startRadius, depth+1));
+            }
+        } else {
+            [lon, lat] = proj4('EU', 'WM', [tLon*100000, tLat*100000]);
+            return(1, [tilenameNext, {'x': xNext, 'y': yNext, 'lSurf': lSurf, 'radius': radiusCalculation(lat), 'angle': angle}])
+        }
     }
-    return(tile);
 }
 
+function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
+    let pX = point.p.x;
+    let pY = point.p.y;
+    let di = point.di;
+    let vMax = point.start.v;
+    let lSurf = point.start.lsurf;
+    let tileMaxElev = maxElevations[tilename];
+    let hBreak = false;
+    let h0 = 0;
 
-var demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demfiles.json'), 'utf8'));
+    let latlngs = [];
+    let lladd = [];
+    let llon = [];
 
-console.log(demFileData);
+    let [lon, lat] = proj4('EU', "WM", tileIndexToCoord(...tileIndex(tilename), pX, pY));
+    let startRadius = (point.start.radius ? point.start.radius : radiusCalculation(lat));  // Earths radius in the first point (in meters)
+    let ps = pointSteps(di);
+    let lastPoint = (point.last ? point.last : {
+        'radius': radiusCalculation(lat),
+        'angle': 0
+    });
+    let calcAngle = lastPoint.angle;
 
-tile = openTile(demFileData, '45_39')
+    if (point.start.hasOwnProperty('h')) {
+        h0 = point.start.h;
+    } else {
+        h0 = tiles.elev.get(pX, pY);
+    }
+
+    let h; let objH; let x; let pRadius;
+
+    while (inBounds(pX, pY, -.5, -.5, 3999.5, 3999.5)){
+        h = tiles.elev.get(Math.round(pX), Math.round(pY));
+        h = (h > -10000 ? h : 0);
+        if (tiles.hasObj) {
+            objH = tiles.obj.get(Math.round(pX), Math.round(pY));
+            objH = (objH >= 0 ? objH : 0);
+            if (lSurf > skipObj/25) {
+                h += objH;
+            }
+        }
+
+        [lon, lat] = proj4('EU', "WM", tileIndexToCoord(...tileIndex(tilename), pX, pY));
+        pRadius = radiusCalculation(lat);
+
+        x = Math.sin(calcAngle)*pRadius;
+        
+    }
+
+
+
+
+
+}
+
+// var queue = createResQueue(200, 500, 8)
+// console.log(
+//     queue
+// )
+
+//tile = openTile(demFileData, '45_39')
+//console.log(tile.elev.get(1, 0))

@@ -455,6 +455,6 @@ def main():
     demFileData = json.load(open("./serverParameters/demfiles.json", "r"))
     demPath = demFileData["path"]
     demTiles = demFileData["tiles"]
-    tile = rasterio.open(demPath + "/objects/" + tilename + ".tif").read()
-    print(tile[0][79][5])
-#main()
+    tile = rasterio.open(demPath + "/elev/dem_" + tilename + ".tif").read()
+    print(tile[0][0][1])
+main()
