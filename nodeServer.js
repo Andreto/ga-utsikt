@@ -8,6 +8,7 @@ const querystring = require('querystring');
 const ac = require ('ansicolor').nice;
 const {spawn} = require('child_process');
 const { Console } = require('console');
+const calcVeiwPolys = require('./serverFiles/calculations.js');
 
 const port = process.env.PORT || 3000
 
@@ -46,6 +47,10 @@ app.get('/api/p', (req, res) => {
             res.end();
         }
     )
+});
+
+app.get('/api/pjs', (req, res) => {
+    res.send(calcVeiwPolys.getVeiw(req.query.lon, req.query.lat, req.query.res, req.query.oh));
 });
 
 app.get('/api/grid', (req, res) => {

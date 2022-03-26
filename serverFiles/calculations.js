@@ -21,7 +21,6 @@ const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../server
 
 function openTile(tilename){
     tile = {}
-    console.log(path.join(demFileData.path,('elev/dem_' + tilename + '.tif')))
     tile.elev = gdal.open(path.join(demFileData.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels
     if (demFileData.tiles.obj.includes(tilename)) {
         tile.obj = gdal.open(path.join(demFileData.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels
@@ -171,6 +170,8 @@ function checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, startAngle, sta
             [lon, lat] = proj4('EU', 'WM', tileIndexToCoord(...tileIndex(tilename), xNext, yNext));
             return([1, tilenameNext, {'x': xNext, 'y': yNext, 'lSurf': lSurf, 'radius': radiusCalculation(lat), 'angle': angle}])
         }
+    } else {
+        return([2, '', {}]);
     }
 }
 
@@ -179,14 +180,14 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
     let pY = point.p.y;
     let di = point.di;
     let vMax = point.start.v;
-    let lSurf = point.start.lsurf;
+    let lSurf = point.start.lSurf;
     let tileMaxElev = maxElevations[tilename];
     let hBreak = false;
     let h0 = 0;
 
     let latlngs = [];
     let lladd = [];
-    let llon = [];
+    let llon = false;
 
     let exportObj = []; // :TEMP:
 
@@ -205,8 +206,9 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
         h0 = tiles.elev.get(pX, pY);
     }
 
-    let h; let objH; let x; let y; let v; let pRadius; let curveShift; let requiredElev;
+    h0 = (h0 > -10000 ? h0 : 0);
 
+    let h; let objH; let x; let y; let v; let pRadius; let curveShift; let requiredElev;
     while (inBounds(pX, pY, -.5, -.5, 3999.5, 3999.5)) {
         h = tiles.elev.get(Math.round(pX), Math.round(pY));
         h = (h > -10000 ? h : 0);
@@ -222,7 +224,7 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
         pRadius = radiusCalculation(lat);
 
         x = Math.sin(calcAngle)*pRadius;
-        curveShift = Math.sqrt(pRadius**2 - x**2);
+        curveShift = Math.sqrt(pRadius**2 - x**2) - startRadius;
         x -= Math.sin(calcAngle)*h;
         y = Math.cos(calcAngle)*h + curveShift - h0 - viewHeight;
         
@@ -232,7 +234,6 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
             'angle': calcAngle
         };
         v = (x != 0 ? Math.atan(y/x) : -Math.PI/2);
-
         if (v > vMax && x > 0) {
             if (llon) {
                 if (lladd.length > 1) {
@@ -262,9 +263,8 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
 
         lSurf += ps.l;
         pX += ps.x;
-        pY += ps.y;
+        pY -= ps.y;
     }
-
     if (llon) {
         latlngs.push(lladd);
     }
@@ -278,14 +278,13 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
 
     let tLon; let tLat; let stX; let stY;
     [tLon, tLat, stX, stY] = coordToTileIndex(...tileIndexToCoord(...tileIndex(tilename), Math.round(pX), Math.round(pY)))
-
     let cnCode; let cnObj;
 
     if (hBreak) {
         [cnCode, cnTile, cnObj] = checkNextTile(tilename, stX, stY, di, vMax, (h0 + viewHeight), lSurf, lastPoint.angle, startRadius, 0);
         
         if (cnCode == 0) {
-            return(latlangs, 0, '');
+            return({'ll': latlngs, 'status': 0, 'msg': ''});
         } else if (cnCode == 1) {
             queueObj.p = {'x': cnObj.x, 'y': cnObj.y};
             queueObj.start.lSurf = cnObj.lSurf;
@@ -315,15 +314,11 @@ function calcVeiwPolys(queue, viewHeight) {
 
     while (Object.keys(queue).length > 0) {
         tilename = Object.keys(queue)[0];
-        element = queue[tilename];
-        delete queue[tilename];
-
         tile = openTile(tilename);
 
-        while (element.length > 0) {
-            point = element.pop();
+        while (queue[tilename].length > 0) {
+            point = queue[tilename].pop();
             vLine = calcViewLine(tile, point, tilename, viewHeight, skipObj);
-
             for (let i = 0; i < vLine.ll.length; i++) {
                 lines.push(vLine.ll[i]);
             }
@@ -341,23 +336,28 @@ function calcVeiwPolys(queue, viewHeight) {
         
         delete queue[tilename];
     }
-    return({'lines': lines, 'hzPoly': hzPoly, 'exInfo': exInfo});
+    return({'pl': lines, 'hz': hzPoly, 'info': exInfo});
 }
 
 function getVeiw(lon, lat, res, viewHeight) {
     queue = createResQueue(lon, lat, res);
-    console.log(calcVeiwPolys(queue, viewHeight));
+    return(calcVeiwPolys(queue, viewHeight));
 }
+
+module.exports = { getVeiw };
 
 // var queue = createResQueue(200, 500, 8)
 // console.log(
 //     queue
 // )
 
-getVeiw(4511250, 3320700, 9, 2)
+//getVeiw(4511250, 3320700, 9, 2)
+// var tiles = openTile("44_39");
 
-//tile = openTile(demFileData, '45_39')
-//console.log(tile.elev.get(1, 0))
-
-
-
+// var p = {
+//     'p': {'x': 0, 'y': 0},
+//     'di': 0,
+//     'start': {'v': -4, 'lSurf': 0, 'radius': 0},
+//     'last': 0 
+// }
+// console.log(calcViewLine(tiles, p, "44_39", 2, 100).ll);

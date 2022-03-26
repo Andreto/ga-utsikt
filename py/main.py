@@ -17,7 +17,7 @@ from contextlib import redirect_stdout
 
 import worldfiles as wf
 
-sys.path.append('./py/__pymodules__')
+sys.path.append("./py/__pymodules__")
 
 
 # Longitude = X ; Latitude = Y
@@ -36,7 +36,7 @@ euTOwm = proj.Transformer.from_crs("epsg:3035", "epsg:4326", always_xy=True)
 exportData = [] # :TEMP:
 
 def log(*msg):
-    with open('temp/py_log.txt', 'a+') as f:
+    with open("temp/py_log.txt", "a+") as f:
         time = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         msgCon = " ".join(map(str, msg))
         with redirect_stdout(f):
@@ -318,7 +318,6 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
         lon, lat = euTOwm.transform(*tileIndexToCoord(*tileIndex(tilename), pX, pY))
         pRadius = radiusCalculation(lat) # Earths radius in the current point (in meters)
         
-        # print(calcAngle) # :TEMP:
         x = math.sin(calcAngle)*pRadius # Account for the earths curvature droping of
         curveShift = math.sqrt(pRadius**2 - x**2) - startRadius # Shift in absolute y-position due to earths curvature
         x -= math.sin(calcAngle)*h # Account for the hight data being perpendicular to the earths surface
@@ -389,7 +388,6 @@ def calcViewLine(tiles, point, tilename, viewHeight, demTiles, maxElev, skipObj)
         if cnCode == 0:
             return(latlngs, 0, "")
         elif cnCode == 1:
-            # print("Next tile:", cnObj[0], "at", cnObj[1], "with dir", di) # :TEMP:
             queueObj["p"] = {"x": cnObj[1]["x"], "y": cnObj[1]["y"]}
             queueObj["start"]["lSurf"] = cnObj[1]["lSurf"]
             queueObj["last"] = {"radius": cnObj[1]["radius"], "angle": cnObj[1]["angle"]}
@@ -456,5 +454,4 @@ def main():
     demPath = demFileData["path"]
     demTiles = demFileData["tiles"]
     tile = rasterio.open(demPath + "/elev/dem_" + tilename + ".tif").read()
-    print(tile[0][0][1])
-main()
+#main()
