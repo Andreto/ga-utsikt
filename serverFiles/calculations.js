@@ -22,6 +22,7 @@ const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../server
 function openTile(tilename){
     tile = {}
     tile.elev = gdal.open(path.join(demFileData.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels
+    console.log(demFileData.tiles.obj)
     if (demFileData.tiles.obj.includes(tilename)) {
         tile.obj = gdal.open(path.join(demFileData.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels
         tile.hasObj = true
@@ -344,7 +345,19 @@ function getVeiw(lon, lat, res, viewHeight) {
     return(calcVeiwPolys(queue, viewHeight));
 }
 
-module.exports = { getVeiw };
+function getPoint(lon, lat) {
+    let [tLon, tLat, x, y] = coordToTileIndex(lon, lat);
+    let tile = openTile(tileId(tLon, tLat));
+    console.log(tile);
+    return({
+        'lon': lon,
+        'lat': lat,
+        'elev': Math.round(tile.elev.get(x, y)*100)/100,
+        'obj': (tile.hasObj ? tile.obj.get(x, y) : null)
+    })
+}
+
+module.exports = { getVeiw, getPoint};
 
 // var queue = createResQueue(200, 500, 8)
 // console.log(
