@@ -20,14 +20,13 @@ const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverPa
 const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));
 
 function openTile(tilename){
-    tile = {}
-    tile.elev = gdal.open(path.join(demFileData.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels
-    console.log(demFileData.tiles.obj)
+    let tile = {};
+    tile.elev = gdal.open(path.join(demFileData.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels;
     if (demFileData.tiles.obj.includes(tilename)) {
-        tile.obj = gdal.open(path.join(demFileData.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels
-        tile.hasObj = true
+        tile.obj = gdal.open(path.join(demFileData.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels;
+        tile.hasObj = true;
     } else {
-        tile.hasObj = false
+        tile.hasObj = false;
     }
     return(tile);
 }
