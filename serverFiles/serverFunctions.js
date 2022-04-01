@@ -3,7 +3,7 @@ const ac = require ('ansicolor').nice;
 
 function findDems() {
     lookupPaths = [
-        "E:/EUDEM_1-1/demtiles",
+        "E:/EUDEM_1-1/demtiles/JSON",
         "D:/EUDEM_1-1/demtiles",
         "./demtiles"
     ]
@@ -20,7 +20,7 @@ function findDems() {
 function countDems(folder) {
     if (!folder) {return(false);}
     let elevDems = fs.readdirSync(folder + "/elev");
-    let objDems = fs.readdirSync(folder + "/objects");
+    let objDems = fs.readdirSync(folder + "/obj");
     for (let i = 0; i < elevDems.length; i++) {
         elevDems[i] = elevDems[i].replace(/dem_|.tif/g, "");
     }

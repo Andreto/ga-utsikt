@@ -3,7 +3,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const gdal = require('gdal');
 const proj4 = require('proj4');
 
 proj4.defs([
@@ -16,14 +15,14 @@ const equatorRadius = 6378137
 const poleRadius = 6356752
 const maxCurveRadius = (equatorRadius**2)/poleRadius
 
-const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demfiles.json'), 'utf8'));
+const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFiles.json'), 'utf8'));
 const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));
 
 function openTile(tilename){
     let tile = {};
-    tile.elev = gdal.open(path.join(demFileData.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels;
+    tile.elev = JSON.parse(fs.readFileSync(path.join(demFileData.path, ('elev/' + tilename + '.json')), 'utf8'));
     if (demFileData.tiles.obj.includes(tilename)) {
-        tile.obj = gdal.open(path.join(demFileData.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels;
+        tile.obj = JSON.parse(fs.readFileSync(path.join(demFileData.path, ('obj/' + tilename + '.json')), 'utf8'));
         tile.hasObj = true;
     } else {
         tile.hasObj = false;
@@ -61,6 +60,14 @@ function getTileArea(tLon, tLat) { // Get tile-area (array [x, y])
         proj4('EU', "WM", [tLon*100000, (tLat+1)*100000]),
     ];
     latlngs.push(latlngs[0]);
+    return(latlngs);
+}
+
+function getAvailableTiles() {
+    let latlngs = [];
+    for (let i = 0; i < demFileData.tiles.obj.length; i++) {
+        latlngs.push(getTileArea(...tileIndex(demFileData.tiles.obj[i])));
+    }
     return(latlngs);
 }
 
@@ -203,17 +210,17 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
     if (point.start.hasOwnProperty('h')) {
         h0 = point.start.h;
     } else {
-        h0 = tiles.elev.get(pX, pY);
+        h0 = tiles.elev[pY][pX];
     }
 
     h0 = (h0 > -10000 ? h0 : 0);
 
     let h; let objH; let x; let y; let v; let pRadius; let curveShift; let requiredElev;
     while (inBounds(pX, pY, -.5, -.5, 3999.5, 3999.5)) {
-        h = tiles.elev.get(Math.round(pX), Math.round(pY));
+        h = tiles.elev[Math.round(pY)][Math.round(pX)];
         h = (h > -10000 ? h : 0);
         if (tiles.hasObj) {
-            objH = tiles.obj.get(Math.round(pX), Math.round(pY));
+            objH = tiles.obj[Math.round(pY)][Math.round(pX)];
             objH = (objH >= 0 ? objH : 0);
             if (lSurf > skipObj/25) {
                 h += objH;
@@ -347,16 +354,15 @@ function getVeiw(lon, lat, res, viewHeight) {
 function getPoint(lon, lat) {
     let [tLon, tLat, x, y] = coordToTileIndex(lon, lat);
     let tile = openTile(tileId(tLon, tLat));
-    console.log(tile);
     return({
         'lon': lon,
         'lat': lat,
-        'elev': Math.round(tile.elev.get(x, y)*100)/100,
-        'obj': (tile.hasObj ? tile.obj.get(x, y) : null)
+        'elev': Math.round(tile.elev[y][x]*100)/100,
+        'obj': (tile.hasObj ? tile.obj[y][x] : null)
     })
 }
 
-module.exports = { getVeiw, getPoint};
+module.exports = { getVeiw, getPoint, getAvailableTiles};
 
 // var queue = createResQueue(200, 500, 8)
 // console.log(

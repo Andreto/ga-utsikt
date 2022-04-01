@@ -6,7 +6,6 @@ const path = require('path');
 const url = require('url');
 const querystring = require('querystring');
 const ac = require ('ansicolor').nice;
-const { spawn } = require('child_process');
 const { Console } = require('console');
 const calc = require('./serverFiles/calculations.js');
 const sFunc = require('./serverFiles/serverFunctions.js');
@@ -23,12 +22,13 @@ app.get('/serverStatus', (req, res) => {
     res.end();
 });
 
-app.get('/api/pjs', (req, res) => {
+app.get('/api/p', (req, res) => {
     res.send(calc.getVeiw(req.query.lon, req.query.lat, req.query.res, req.query.oh));
     res.end();
 });
 
 app.get('/api/grid', (req, res) => {
+    res.send(getAvailableTiles());
     res.end();
 });
 

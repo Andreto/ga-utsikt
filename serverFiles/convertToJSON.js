@@ -5,14 +5,14 @@ const gdal = require('gdal');
 
 const demSize = 4000;
 
-const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demfiles.json'), 'utf8'));
+const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFiles.json'), 'utf8'));
 const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));
 
 function openTile(tilename){
     let tile = {};
-    tile.elev = gdal.open(path.join(demFileData.path,('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels;
-    if (demFileData.tiles.obj.includes(tilename)) {
-        tile.obj = gdal.open(path.join(demFileData.path,('objects/' + tilename + '.tif'))).bands.get(1).pixels;
+    tile.elev = gdal.open(path.join(demFileData.path.replace("/JSON", ""),('elev/dem_' + tilename + '.tif'))).bands.get(1).pixels;
+    if (demFileData.tiles.obj.includes(tilename) || true) {
+        tile.obj = gdal.open(path.join(demFileData.path.replace("/JSON", "") ,('objects/' + tilename + '.tif'))).bands.get(1).pixels;
         tile.hasObj = true;
     } else {
         tile.hasObj = false;
@@ -32,12 +32,12 @@ function saveJson(filename, data) {
         tileList.push(yList)
     }   
     let json = JSON.stringify(tileList)
-    fs.writeFile(path.join(demFileData.path, ("JSON/" + filename + ".json")), json, 'utf8', (err) => {
+    fs.writeFile(path.join(demFileData.path, (filename + ".json")), json, 'utf8', (err) => {
         if (err) throw err;
     });
 }
 
-filename = "45_39"
+filename = "46_39"
 let tile = openTile(filename);
 saveJson("elev/" + filename, tile.elev);
 if (tile.hasObj) {
