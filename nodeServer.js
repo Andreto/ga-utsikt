@@ -11,22 +11,16 @@ const { Console } = require('console');
 const calc = require('./serverFiles/calculations.js');
 const sFunc = require('./serverFiles/serverFunctions.js');
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3000;
 
 const app = express();
 
-app.use('/', express.static('serverFiles/mainPage'))
-app.use('/sightlines', express.static('serverFiles/sightlines'))
+app.use('/', express.static('serverFiles/mainPage'));
+app.use('/sightlines', express.static('serverFiles/sightlines'));
 
-app.get('/api/p', (req, res) => {
-    spawnPythonProc(req, res, 
-        ['./py/node_exec/getViewPolygons.py', req.query.lon, req.query.lat, req.query.res,  req.query.oh],
-        function(req, res, data, code) {
-            console.log(`getViewPolygons.py closed with ${code}`);
-            res.send(data);
-            res.end();
-        }
-    )
+app.get('/serverStatus', (req, res) => {
+    res.send("Server is running");
+    res.end();
 });
 
 app.get('/api/pjs', (req, res) => {
