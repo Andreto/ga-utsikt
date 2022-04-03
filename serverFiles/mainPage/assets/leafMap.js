@@ -70,6 +70,7 @@ function showTileGrids() {
 //     });
 
 var pl, hz; // Map-items that displays view-poly-lines and horizon-line
+var pld = []; var hzd = [];
 
 // When a point on the map is clicked, this point is set as the calculation base-point
 function onMapClick(e) {
@@ -96,8 +97,8 @@ function loadMapData(latlng) {
     var calcResolution = document.getElementById('resInput').value;
     var observerHeight = document.getElementById('obshInput').value;
 
-    console.log('http://localhost:3000/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight);
-    fetch('http://localhost:3000/api/pjs?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight)
+    console.log('/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight);
+    fetch('/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight)
         .then(response => response.json()).then(data => {
             console.log(data.toString())
             if (pl) { pl.remove(map) }
@@ -118,6 +119,39 @@ function loadMapData(latlng) {
         });
 }
 
+function loadMapDataDirs(latlng) {
+    mapElem.classList.add('loading');
+    mapLoaderElem.classList.add('show');
+    mapLogElem.classList.remove('error');
+
+    var calcResolution = document.getElementById('resInput').value;
+    var observerHeight = document.getElementById('obshInput').value;
+
+    if (pld.length > 0) {
+        for (let i=0; i < pld.length; i++) {
+            pld[i].remove(map);
+        }
+    }
+    pld = [];
+
+    for (let i=0; i < calcResolution; i++) {
+        fetch('/api/pd?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&di=' + String(i*2*(Math.PI/calcResolution)) + '&oh=' + observerHeight)
+            .then(response => response.json()).then(data => {
+                let p = L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
+                pld.push(p);
+                if (parseFloat(data.di) == (2*Math.PI - ((2*Math.PI)/calcResolution))) {
+                    mapElem.classList.remove('loading');
+                    mapLoaderElem.classList.remove('show');
+                }
+            });
+    }
+    // fetch('/api/pd?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&di=' + "1.8" + '&oh=' + observerHeight)
+    // .then(response => response.json()).then(data => {
+    //     let p = L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
+    //     pld.push(p);
+    // });
+}
+
 function onResize(e) {
     var leafScale = document.getElementsByClassName('leaflet-control-scale-line')[0];
     var scaleInd = document.getElementById('scale-ind');
@@ -132,8 +166,8 @@ function showGridLabels() {
 
 function updateMapElev(lon, lat) {
     document.getElementById('elevetion-display').innerHTML = 'Uppdaterar<br>...';
-    console.log('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat);
-    fetch('http://localhost:3000/api/elev?lon=' + lon + '&lat=' + lat)
+    console.log('/api/elev?lon=' + lon + '&lat=' + lat);
+    fetch('/api/elev?lon=' + lon + '&lat=' + lat)
     .then(response => response.json()).then(data => {
         console.log(data.elev);
         document.getElementById('elevetion-display').innerHTML = '<b>Markhöjd:</b> ' + data.elev + ' möh <br><b>Objekthöjd:</b> ' + data.obj + ' m';
@@ -152,7 +186,7 @@ L.control.scale().addTo(map);
 
 // Map Action-buttons
 calcButtonElem.addEventListener('click', function () {
-    loadMapData(calcLocation.getLatLng())
+    loadMapDataDirs(calcLocation.getLatLng())
 });
 locatorButton.addEventListener('click', function () {
     locatorSvg.classList.add('spinAnim');

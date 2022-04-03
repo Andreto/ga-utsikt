@@ -10,6 +10,7 @@ const { spawn } = require('child_process');
 const { Console } = require('console');
 const calc = require('./serverFiles/calculations.js');
 const sFunc = require('./serverFiles/serverFunctions.js');
+const bucketDL = require('./serverFiles/bucketDL.js');
 
 const port = process.env.PORT || 3000;
 
@@ -23,9 +24,12 @@ app.get('/serverStatus', (req, res) => {
     res.end();
 });
 
-app.get('/api/pjs', (req, res) => {
+app.get('/api/p', (req, res) => {
     res.send(calc.getVeiw(req.query.lon, req.query.lat, req.query.res, req.query.oh));
-    res.end();
+});
+
+app.get('/api/pd', (req, res) => {
+    res.send(calc.getVeiwOneDir(req.query.lon, req.query.lat, req.query.di, req.query.oh))
 });
 
 app.get('/api/grid', (req, res) => {
@@ -38,13 +42,16 @@ app.get('/api/points', (req, res) => {
 
 app.get('/api/elev', (req, res) => {
     res.send(calc.getPoint(req.query.lon, req.query.lat, req.query.res, req.query.oh));
-    res.end();
 });
 
+app.get('/api/demFiles', (req, res) => {
+    res.send(JSON.stringify(sFunc.getDemFiles()));
+});
 
 // Start server
 app.listen(port, () => {
     // Check for errors, warnings, etc
     sFunc.serverStart();
+    //bucketDL.dlDems();
     console.log('🔵 SERVER STARTED');
 });

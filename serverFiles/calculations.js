@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const gdal = require('gdal');
+const gdal = require('gdal-async');
 const proj4 = require('proj4');
 
 proj4.defs([
@@ -11,12 +11,14 @@ proj4.defs([
     ['EU', '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs']
 ]);
 
-const earthRadius = 6371000
-const equatorRadius = 6378137
-const poleRadius = 6356752
-const maxCurveRadius = (equatorRadius**2)/poleRadius
+const earthRadius = 6371000;
+const equatorRadius = 6378137;
+const poleRadius = 6356752;
+const maxCurveRadius = (equatorRadius**2)/poleRadius;
 
-const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demfiles.json'), 'utf8'));
+var exportData = [];
+
+const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFiles.json'), 'utf8'));
 const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));
 
 function openTile(tilename){
@@ -29,6 +31,11 @@ function openTile(tilename){
         tile.hasObj = false;
     }
     return(tile);
+}
+
+function exportCsv(data) {
+    let csvContent = ("sep=,\n" + data.map(e => e.join(",")).join("\n"));
+    fs.writeFileSync(path.join(__dirname, '../temp/tmpData.csv'), csvContent);
 }
 
 function tileIndexToCoord(tLon, tLat, x, y) {
@@ -157,7 +164,7 @@ function checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, startAngle, sta
 
     if (demFileData.tiles.elev.includes(tilenameNext)) {
         let curveShift = maxCurveRadius - Math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius;
-        let requiredElev = Math.sin((lSurf*25)/maxCurveRadius)*Math.tan(vMax) + curveShift + hOffset;
+        let requiredElev = (Math.sin((lSurf*25)/maxCurveRadius)*Math.tan(vMax)) + curveShift + hOffset;
         let angle = (lSurf*25)/earthRadius;
 
         if (maxElevations[tilenameNext] < requiredElev) {
@@ -189,7 +196,6 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
     let lladd = [];
     let llon = false;
 
-    let exportObj = []; // :TEMP:
 
     let [lon, lat] = proj4('EU', "WM", tileIndexToCoord(...tileIndex(tilename), pX, pY));
     let startRadius = (point.start.radius ? point.start.radius : radiusCalculation(lat));  // Earths radius in the first point (in meters)
@@ -224,16 +230,20 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
         pRadius = radiusCalculation(lat);
 
         x = Math.sin(calcAngle)*pRadius;
-        curveShift = Math.sqrt(pRadius**2 - x**2) - startRadius;
+        curveShift = Math.sqrt(Math.pow(pRadius, 2) - Math.pow(x, 2)) - startRadius;
         x -= Math.sin(calcAngle)*h;
         y = Math.cos(calcAngle)*h + curveShift - h0 - viewHeight;
         
-        calcAngle += sssAngle(lastPoint.radius, pRadius, ps.l);
+        calcAngle += sssAngle(lastPoint.radius, pRadius, ps.l*25);
         lastPoint = {
             'radius': pRadius,
             'angle': calcAngle
         };
+
         v = (x != 0 ? Math.atan(y/x) : -Math.PI/2);
+
+        //exportData.push([x, y, h, v, vMax, curveShift, lSurf, pRadius]);
+
         if (v > vMax && x > 0) {
             if (llon) {
                 if (lladd.length > 1) {
@@ -255,7 +265,7 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
             lladd = [];
         }
 
-        requiredElev = (Math.tan(vMax)*x) - curveShift + h0 + viewHeight
+        requiredElev = (Math.tan(vMax)*x) - curveShift + h0 + viewHeight;
         if (requiredElev > tileMaxElev && x > 0) {
             hBreak = true;
             break;
@@ -344,10 +354,17 @@ function getVeiw(lon, lat, res, viewHeight) {
     return(calcVeiwPolys(queue, viewHeight));
 }
 
+function getVeiwOneDir(lon, lat, di, viewHeight) {
+    queue = createDiQueue(lon, lat, [di]);
+    var calcD = calcVeiwPolys(queue, viewHeight);
+    calcD.di = di;
+    //exportCsv(exportData);
+    return(calcD);
+}
+
 function getPoint(lon, lat) {
     let [tLon, tLat, x, y] = coordToTileIndex(lon, lat);
     let tile = openTile(tileId(tLon, tLat));
-    console.log(tile);
     return({
         'lon': lon,
         'lat': lat,
@@ -356,7 +373,7 @@ function getPoint(lon, lat) {
     })
 }
 
-module.exports = { getVeiw, getPoint};
+module.exports = { getVeiw, getPoint, getVeiwOneDir};
 
 // var queue = createResQueue(200, 500, 8)
 // console.log(

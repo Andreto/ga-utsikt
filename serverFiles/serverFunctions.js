@@ -3,8 +3,7 @@ const ac = require ('ansicolor').nice;
 
 function findDems() {
     lookupPaths = [
-        "E:/EUDEM_1-1/demtiles",
-        "D:/EUDEM_1-1/demtiles",
+        //"E:/EUDEM_1-1/demtiles",
         "./demtiles"
     ]
     for (let i = 0; i < lookupPaths.length; i++) {
@@ -49,4 +48,9 @@ function serverStart() {
     demCounts = countDems(demFolder)
 }
 
-module.exports = {serverStart}
+function getDemFiles() {
+    serverStart();
+    return (JSON.parse(fs.readFileSync('./serverParameters/demFiles.json', 'utf8')));
+}
+
+module.exports = {serverStart, getDemFiles, countDems}

@@ -11,9 +11,10 @@
   "license": "MIT",
   "dependencies": {
     "ansicolor": "^1.1.95",
+    "aws-sdk": "^2.1106.0",
     "express": "^4.17.1",
     "gdal": "^0.11.1",
-    "geotiff": "^2.0.5",
+    "gdal-async": "^3.4.2",
     "proj4": "^2.8.0"
   }
 }
