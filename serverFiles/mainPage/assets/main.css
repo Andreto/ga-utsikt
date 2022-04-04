@@ -92,6 +92,19 @@ body {
     margin-top: 4px;
 }
 
+.info-header {
+    position: absolute;
+    top: 10px;
+    left: 200px;
+    right: 200px;
+    border-radius: 4px;
+    background-color: #fff;
+    z-index: 1;
+    padding: 4px;
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 1em;
+}
+
 .scale-indicator {
     position: absolute;
     left: 10px;

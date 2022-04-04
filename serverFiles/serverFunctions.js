@@ -3,7 +3,7 @@ const ac = require ('ansicolor').nice;
 
 function findDems() {
     lookupPaths = [
-        //"E:/EUDEM_1-1/demtiles",
+        "E:/EUDEM_1-1/demtiles",
         "./demtiles"
     ]
     for (let i = 0; i < lookupPaths.length; i++) {
