@@ -139,7 +139,7 @@ function loadMapDataDirs(latlng) {
             .then(response => response.json()).then(data => {
                 let p = L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
                 pld.push(p);
-                if (parseFloat(data.di) == (2*Math.PI - ((2*Math.PI)/calcResolution))) {
+                if (parseFloat(data.di) > (2*Math.PI - ((4*Math.PI)/calcResolution))) {
                     mapElem.classList.remove('loading');
                     mapLoaderElem.classList.remove('show');
                 }

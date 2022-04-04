@@ -39,7 +39,7 @@
         </div>
 
     </div>
-    <div class="info-header">Välkommen till utsiktskartan! Klicka på kartan för att välja en utsiktspunkt. Efter att du klickar "Beräkna", kommer den synliga arean att markeras med rött på kartan.</div>
+    <div class="info-header" onclick="this.style.display = 'none';">Välkommen till utsiktskartan! Klicka på kartan för att välja en utsiktspunkt. Efter att du klickar "Beräkna", kommer den synliga arean att markeras med rött på kartan.</div>
     <div class="map-control-overlay">
 
     </div>
@@ -57,6 +57,9 @@
             <br>
             <div id="map-log" class=""></div>
         </div>
+    </div>
+    <div id="credit-info">
+        Utsiktskartan använder geodata från <a href="https://www.skogsstyrelsen.se/sjalvservice/karttjanster/skogliga-grunddata/">Skogstyrelsen</a> och <a href="https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=metadata">Copernicus</a>
     </div>
     <script src="assets/leafMap.js"></script>
 </body>

@@ -91,7 +91,14 @@ body {
     padding: 2px 4px;
     margin-top: 4px;
 }
-
+#credit-info {
+    font-size: .8em;
+    color: #999;
+    margin-top: 6px;
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    float: right;
+    padding-right: 20px;
+}
 .info-header {
     position: absolute;
     top: 10px;
@@ -103,6 +110,12 @@ body {
     padding: 4px;
     font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     font-size: 1em;
+}
+.info-header:hover::after {
+    display: block;
+    content: 'x';
+    float: right;
+    color: #DD782F;
 }
 
 .scale-indicator {
@@ -212,6 +225,14 @@ input[type=range] {
 
 
 /* MEDIA QUERIES */
+
+@media only screen and (max-width: 950px) {
+    .info-header {
+        left: 60px;
+        right: 60px;
+    }
+}
+
 
 @media only screen and (max-width: 400px) {
     #calc-button {
