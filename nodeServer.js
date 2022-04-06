@@ -52,6 +52,6 @@ app.get('/api/demFiles', (req, res) => {
 app.listen(port, () => {
     // Check for errors, warnings, etc
     sFunc.serverStart();
-    bucketDL.dlDems();
+    //bucketDL.dlDems();
     console.log('🔵 SERVER STARTED');
 });

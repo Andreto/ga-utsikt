@@ -18,7 +18,7 @@ const maxCurveRadius = (equatorRadius**2)/poleRadius;
 
 var exportData = [];
 
-const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFilesLock.json'), 'utf8'));
+const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFiles.json'), 'utf8'));
 const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));
 
 function openTile(tilename){
@@ -349,12 +349,14 @@ function calcVeiwPolys(queue, viewHeight) {
     return({'pl': lines, 'hz': hzPoly, 'info': exInfo});
 }
 
-function getVeiw(lon, lat, res, viewHeight) {
+
+
+function getVeiw(lon, lat, res, viewHeight) { //Returns a list of latlngs of the view from a point (lon, lat) with a resolution (res) and a view height (viewHeight)
     queue = createResQueue(lon, lat, res);
     return(calcVeiwPolys(queue, viewHeight));
 }
 
-function getVeiwOneDir(lon, lat, di, viewHeight) {
+function getVeiwOneDir(lon, lat, di, viewHeight) { //Returns a list of latlngs of the view from a point (lon, lat) in one direction (di) and a view height (viewHeight)
     queue = createDiQueue(lon, lat, [di]);
     var calcD = calcVeiwPolys(queue, viewHeight);
     calcD.di = di;

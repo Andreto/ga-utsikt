@@ -5,8 +5,7 @@ node_modules/
 py/__pycache__/
 
 temp/
-demtiles/
-serverParameters/*
+serverParameters/demFiles.JSON
 .vscode
 .vs
 serverFiles/mainPage/assets/hillExport.js
