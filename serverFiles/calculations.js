@@ -151,7 +151,7 @@ function nextTileBorder(tilename, x, y, di) {
         nX = x + Math.abs(yLen / Math.tan(di))*((Math.cos(di) > 0) ? 1 : -1);
         nY = y + yLen;
     }
-    return(coordToTileIndex(...tileIndexToCoord(...tileIndex(tilename), nX, nY))); //:TODO: Check if this is correct
+    return(coordToTileIndex(...tileIndexToCoord(...tileIndex(tilename), nX, nY))); 
 }
 
 function checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, startAngle, startRadius, depth) {
@@ -165,7 +165,7 @@ function checkNextTile(tilename, x, y, di, vMax, hOffset, lSurf, startAngle, sta
     if (demFileData.tiles.elev.includes(tilenameNext)) {
         let curveShift = maxCurveRadius - Math.cos((lSurf*25)/maxCurveRadius)*maxCurveRadius;
         let requiredElev = (Math.sin((lSurf*25)/maxCurveRadius)*Math.tan(vMax)) + curveShift + hOffset;
-        let angle = (lSurf*25)/earthRadius;
+        let angle = (lSurf*25)/earthRadius; // :TODO: Fixa stegmetod
 
         if (maxElevations[tilenameNext] < requiredElev) {
             if (maxElevations.global < requiredElev) {
