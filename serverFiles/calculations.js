@@ -265,7 +265,7 @@ function calcViewLine(tiles, point, tilename, viewHeight, skipObj) {
             lladd = [];
         }
 
-        requiredElev = (Math.tan(vMax)*x) - curveShift + h0 + viewHeight;
+        requiredElev = (Math.tan(vMax)*x) - curveShift + h0 + viewHeight;  // :TODO: Träd kan vara höga
         if (requiredElev > tileMaxElev && x > 0) {
             hBreak = true;
             break;
