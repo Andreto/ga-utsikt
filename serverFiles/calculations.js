@@ -349,7 +349,22 @@ function calcVeiwPolys(queue, viewHeight) {
     return({'pl': lines, 'hz': hzPoly, 'info': exInfo});
 }
 
-
+// Export Functions
+function getGridLines(layer) {
+    var latlngs = [];
+    var tiles = [];
+    if (layer == "elev") {
+        tiles = demFileData.tiles.elev;
+    } else if (layer == "obj") {
+        tiles = demFileData.tiles.obj;
+    } else {
+        return('Invalid layer');
+    }
+    for (let i = 0; i < tiles.length; i++) {
+        latlngs.push(getTileArea(...tileIndex(tiles[i])));
+    }
+    return latlngs;
+}
 
 function getVeiw(lon, lat, res, viewHeight) { //Returns a list of latlngs of the view from a point (lon, lat) with a resolution (res) and a view height (viewHeight)
     queue = createResQueue(lon, lat, res);
@@ -375,7 +390,7 @@ function getPoint(lon, lat) {
     })
 }
 
-module.exports = { getVeiw, getPoint, getVeiwOneDir};
+module.exports = { getGridLines, getVeiw, getPoint, getVeiwOneDir };
 
 // var queue = createResQueue(200, 500, 8)
 // console.log(

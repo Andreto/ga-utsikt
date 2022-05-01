@@ -16,35 +16,28 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
-app.use('/', express.static('serverFiles/mainPage'));
-app.use('/sightlines', express.static('serverFiles/sightlines'));
-
 app.get('/serverStatus', (req, res) => {
     res.send("Server is running");
     res.end();
 });
 
-app.get('/api/p', (req, res) => {
+app.get('/p', (req, res) => {
     res.send(calc.getVeiw(req.query.lon, req.query.lat, req.query.res, req.query.oh));
 });
 
-app.get('/api/pd', (req, res) => {
+app.get('/pd', (req, res) => {
     res.send(calc.getVeiwOneDir(req.query.lon, req.query.lat, req.query.di, req.query.oh))
 });
 
-app.get('/api/grid', (req, res) => {
-    res.end();
+app.get('/grid', (req, res) => {
+    res.send(calc.getGridLines(req.query.layer));
 });
 
-app.get('/api/points', (req, res) => {
-    res.end();
-});
-
-app.get('/api/elev', (req, res) => {
+app.get('/elev', (req, res) => {
     res.send(calc.getPoint(req.query.lon, req.query.lat, req.query.res, req.query.oh));
 });
 
-app.get('/api/demFiles', (req, res) => {
+app.get('/demFiles', (req, res) => {
     res.send(JSON.stringify(sFunc.getDemFiles()));
 });
 
