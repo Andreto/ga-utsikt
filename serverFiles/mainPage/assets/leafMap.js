@@ -20,6 +20,11 @@ proj4.defs([
 
 var calcChoordsETRS = proj4('WGS84', 'ETRS89', [18.07, 59.33]);
 
+var baseApiUrl = '/';
+if (window.location.hostname == 'andreto.github.io') {
+    "http://utsiktskartan.eu-north-1.elasticbeanstalk.com/";
+}
+
 
 // Configure map element
 var map = L.map('map').setView([59.33, 18.07], 6);
@@ -47,7 +52,7 @@ var calcLocation = L.marker([59.33, 18.07], {
 
 function showTileGrids() {
     var tileBound;
-    fetch('http://localhost:3000/api/grid')
+    fetch(baseApiUrl + 'api/grid')
     .then(response => response.json()).then(data => {
         tileBound = L.polyline(
             data.p,
@@ -97,8 +102,8 @@ function loadMapData(latlng) {
     var calcResolution = document.getElementById('resInput').value;
     var observerHeight = document.getElementById('obshInput').value;
 
-    console.log('/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight);
-    fetch('/api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight)
+    console.log(baseApiUrl + 'api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight);
+    fetch(baseApiUrl + 'api/p?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&res=' + calcResolution + '&oh=' + observerHeight)
         .then(response => response.json()).then(data => {
             console.log(data.toString())
             if (pl) { pl.remove(map) }
@@ -135,7 +140,7 @@ function loadMapDataDirs(latlng) {
     pld = [];
 
     for (let i=0; i < calcResolution; i++) {
-        fetch('/api/pd?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&di=' + String(i*2*(Math.PI/calcResolution)) + '&oh=' + observerHeight)
+        fetch(baseApiUrl + 'api/pd?lon=' + calcChoordsETRS[0] + '&lat=' + calcChoordsETRS[1] + '&di=' + String(i*2*(Math.PI/calcResolution)) + '&oh=' + observerHeight)
             .then(response => response.json()).then(data => {
                 let p = L.polyline(data['pl'], { color: '#B13A3C', weight: 2 }).addTo(map);
                 pld.push(p);
@@ -166,8 +171,8 @@ function showGridLabels() {
 
 function updateMapElev(lon, lat) {
     document.getElementById('elevetion-display').innerHTML = 'Uppdaterar<br>...';
-    console.log('/api/elev?lon=' + lon + '&lat=' + lat);
-    fetch('/api/elev?lon=' + lon + '&lat=' + lat)
+    console.log(baseApiUrl +'api/elev?lon=' + lon + '&lat=' + lat);
+    fetch(baseApiUrl + 'api/elev?lon=' + lon + '&lat=' + lat)
     .then(response => response.json()).then(data => {
         console.log(data.elev);
         document.getElementById('elevetion-display').innerHTML = '<b>Markhöjd:</b> ' + data.elev + ' möh <br><b>Objekthöjd:</b> ' + data.obj + ' m';
