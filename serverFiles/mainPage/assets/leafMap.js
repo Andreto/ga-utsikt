@@ -22,7 +22,7 @@ var calcChoordsETRS = proj4('WGS84', 'ETRS89', [18.07, 59.33]);
 
 var baseApiUrl = '/';
 if (window.location.hostname == 'andreto.github.io') {
-    "http://utsiktskartan.eu-north-1.elasticbeanstalk.com/";
+    baseApiUrl = 'http://utsiktskartan.eu-north-1.elasticbeanstalk.com/';
 }
 
 
