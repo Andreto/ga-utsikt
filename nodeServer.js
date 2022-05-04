@@ -53,6 +53,9 @@ app.get('/demFiles', (req, res) => {
 app.listen(port, () => {
     // Check for errors, warnings, etc
     sFunc.serverStart();
-    //bucketDL.dlDems();
+    if (process.env.AWS_ENVCHECK == 1) {
+        console.log('DOWNLOADING DEM FILES');
+        bucketDL.dlDems();
+    }
     console.log('🔵 SERVER STARTED');
 });
