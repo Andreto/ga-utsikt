@@ -18,10 +18,12 @@ const maxCurveRadius = (equatorRadius**2)/poleRadius;
 
 var exportData = [];
 
+var demFileData;
+
 if (process.env.AWS_ENVCHECK == 1) {
-    const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFilesLock.json'), 'utf8'));
+    demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFilesLock.json'), 'utf8'));
 } else {
-    const demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFiles.json'), 'utf8'));
+    demFileData = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/demFiles.json'), 'utf8'));
 }
 
 const maxElevations = JSON.parse(fs.readFileSync(path.join(__dirname, '../serverParameters/maxElevations.json'), 'utf8'));

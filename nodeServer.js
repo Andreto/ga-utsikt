@@ -30,7 +30,11 @@ app.get('/serverStatus', (req, res) => {
 });
 
 app.get('/p', (req, res) => {
-    res.send(calc.getVeiw(req.query.lon, req.query.lat, req.query.res, req.query.oh));
+    if (req.query.res <= 720) {
+        res.send(calc.getVeiw(req.query.lon, req.query.lat, req.query.res, req.query.oh));
+    } else {
+        res.end();
+    }
 });
 
 app.get('/pd', (req, res) => {
